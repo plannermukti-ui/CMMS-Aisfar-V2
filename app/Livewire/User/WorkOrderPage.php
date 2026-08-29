@@ -6,6 +6,7 @@ use App\Models\Equipment;
 use App\Models\MaterialOrder;
 use App\Models\MaterialOrderItem;
 use App\Models\Part;
+use App\Models\ReffComponent;
 use App\Models\Site;
 use App\Models\User;
 use App\Models\WorkOrder;
@@ -144,6 +145,8 @@ class WorkOrderPage extends Component
         $this->tasks = [
             [
                 'problem_title' => '',
+                'component' => '',
+                'reff_component_id' => '',
                 'is_primary' => true,
                 'breakdown_at' => $defaultBreakdown,
                 'ready_at' => '',
@@ -218,6 +221,8 @@ class WorkOrderPage extends Component
 
             $taskList[] = [
                 'problem_title' => $task->problem_title,
+                'component' => $task->component ?? '',
+                'reff_component_id' => $task->reff_component_id ? (string) $task->reff_component_id : '',
                 'is_primary' => (bool) $task->is_primary,
                 'breakdown_at' => $task->breakdown_at ? $task->breakdown_at->format('Y-m-d\TH:i') : $this->breakdown_at,
                 'ready_at' => $task->ready_at ? $task->ready_at->format('Y-m-d\TH:i') : '',
@@ -241,6 +246,8 @@ class WorkOrderPage extends Component
             $taskList = [
                 [
                     'problem_title' => $wo->problem_description ?? $wo->job_title,
+                    'component' => '',
+                    'reff_component_id' => '',
                     'is_primary' => true,
                     'breakdown_at' => $this->breakdown_at,
                     'ready_at' => $this->ready_at ?: '',
@@ -269,6 +276,8 @@ class WorkOrderPage extends Component
     {
         $this->tasks[] = [
             'problem_title' => '',
+            'component' => '',
+            'reff_component_id' => '',
             'is_primary' => false,
             'breakdown_at' => $this->breakdown_at ?: now()->format('Y-m-d\TH:i'),
             'ready_at' => '',
@@ -615,6 +624,8 @@ class WorkOrderPage extends Component
                 $task = WorkOrderTask::create([
                     'work_order_id' => $wo->id,
                     'problem_title' => $tData['problem_title'],
+                    'component' => ! empty($tData['component']) ? $tData['component'] : null,
+                    'reff_component_id' => ! empty($tData['reff_component_id']) ? $tData['reff_component_id'] : null,
                     'is_primary' => $tIdx === 0,
                     'task_order' => $tIdx + 1,
                     'breakdown_at' => $taskBreakdown,
@@ -856,12 +867,20 @@ class WorkOrderPage extends Component
         $users = User::with(['position', 'department'])->orderBy('full_name')->get();
         $masterParts = Part::with(['locations.site'])->where('is_active', true)->orderBy('name')->get();
 
+        $selectedEquipment = ! empty($this->equipment_id) ? Equipment::with('reffEquip')->find($this->equipment_id) : null;
+        $equipType = $selectedEquipment?->reffEquip?->tipe;
+        $availableComponents = ReffComponent::forEquipmentType($equipType)
+            ->where('status', 'Active')
+            ->orderBy('sort_order')
+            ->get();
+
         return view('livewire.user.work-order-page', [
             'workOrders' => $workOrders,
             'equipments' => $equipments,
             'sites' => $sites,
             'users' => $users,
             'masterParts' => $masterParts,
+            'availableComponents' => $availableComponents,
             'metrics' => $this->metrics,
         ]);
     }

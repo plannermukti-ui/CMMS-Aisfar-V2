@@ -627,9 +627,9 @@
                                     </div>
 
                                     <div class="card-body p-4">
-                                        <!-- Problem Title & Timestamps Input -->
+                                        <!-- Problem Title, Component & Timestamps Input -->
                                         <div class="row g-3 mb-4">
-                                            <div class="col-md-6">
+                                            <div class="col-md-5">
                                                 <label class="form-label required fs-8 fw-bold text-gray-700">Problem (Gejala / Kerusakan)</label>
                                                 <input
                                                     type="text"
@@ -642,13 +642,25 @@
                                                 @enderror
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label fs-8 fw-bold text-gray-700">Waktu Breakdown Problem</label>
+                                                <label class="form-label fs-8 fw-bold text-gray-700">Komponen</label>
+                                                <select wire:model="tasks.{{ $tIdx }}.component" class="form-select form-select-solid fs-8">
+                                                    <option value="">-- Pilih Komponen --</option>
+                                                    @foreach($availableComponents as $cmp)
+                                                        <option value="{{ $cmp->name }}">{{ $cmp->name }} ({{ $cmp->category }})</option>
+                                                    @endforeach
+                                                </select>
+                                                @error("tasks.{$tIdx}.component")
+                                                    <span class="text-danger fs-9 mt-1 d-block">{{ $message }}</span>
+                                                @enderror
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label fs-8 fw-bold text-gray-700">Waktu BD Problem</label>
                                                 <input type="datetime-local" wire:model="tasks.{{ $tIdx }}.breakdown_at" class="form-control form-control-solid fs-8" />
                                                 @error("tasks.{$tIdx}.breakdown_at")
                                                     <span class="text-danger fs-9 mt-1 d-block">{{ $message }}</span>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <label class="form-label fs-8 fw-bold text-gray-700">Waktu Ready Problem</label>
                                                 <input type="datetime-local" wire:model="tasks.{{ $tIdx }}.ready_at" class="form-control form-control-solid fs-8" />
                                                 @error("tasks.{$tIdx}.ready_at")
@@ -1097,6 +1109,11 @@
                                             <span class="badge badge-danger fw-bold fs-9">PRIMARY PROBLEM</span>
                                         @else
                                             <span class="badge badge-light-dark fw-bold fs-9">TASK #{{ $loop->iteration }}</span>
+                                        @endif
+                                        @if($t->component)
+                                            <span class="badge badge-light-info text-info fw-bold fs-9">
+                                                <i class="ki-outline ki-setting-2 fs-9 text-info me-0.5"></i> {{ $t->component }}
+                                            </span>
                                         @endif
                                         <span class="fw-bold text-gray-900 fs-7">{{ $t->problem_title }}</span>
                                     </div>

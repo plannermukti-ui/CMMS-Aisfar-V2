@@ -12,6 +12,8 @@ class WorkOrderTask extends BaseModel
     protected $fillable = [
         'work_order_id',
         'problem_title',
+        'component',
+        'reff_component_id',
         'is_primary',
         'task_order',
         'status',
@@ -40,6 +42,11 @@ class WorkOrderTask extends BaseModel
     public function workOrder(): BelongsTo
     {
         return $this->belongsTo(WorkOrder::class, 'work_order_id');
+    }
+
+    public function reffComponent(): BelongsTo
+    {
+        return $this->belongsTo(ReffComponent::class, 'reff_component_id');
     }
 
     public function subtasks(): HasMany

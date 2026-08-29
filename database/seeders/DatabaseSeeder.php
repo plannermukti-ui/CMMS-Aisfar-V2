@@ -18,8 +18,10 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             UserSeeder::class,
             ReffEquipSeeder::class,
+            ReffComponentSeeder::class,
             EquipmentSeeder::class,
             ScmSeeder::class,
+            WorkOrderSeeder::class,
         ]);
     }
 }
