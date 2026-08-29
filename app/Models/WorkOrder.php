@@ -100,6 +100,11 @@ class WorkOrder extends BaseModel
         return $this->hasMany(WorkOrderTask::class, 'work_order_id')->orderBy('task_order');
     }
 
+    public function comments()
+    {
+        return $this->hasMany(WorkOrderComment::class)->whereNull('parent_id')->with(['user', 'replies'])->orderBy('created_at', 'desc');
+    }
+
     public function primaryTask()
     {
         return $this->hasOne(WorkOrderTask::class, 'work_order_id')->where('is_primary', true);

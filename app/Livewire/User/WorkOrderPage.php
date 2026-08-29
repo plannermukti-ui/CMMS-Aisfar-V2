@@ -10,6 +10,7 @@ use App\Models\ReffComponent;
 use App\Models\Site;
 use App\Models\User;
 use App\Models\WorkOrder;
+use App\Models\WorkOrderComment;
 use App\Models\WorkOrderSubtask;
 use App\Models\WorkOrderSubtaskSparepart;
 use App\Models\WorkOrderTask;
@@ -92,6 +93,13 @@ class WorkOrderPage extends Component
     public ?string $complete_total_labor_hours = '1';
 
     public $after_photo_file = null;
+
+    // Comment / Discussion fields
+    public string $newComment = '';
+
+    public ?string $replyingToId = null;
+
+    public string $newReply = '';
 
     public function updatedEquipmentId($value): void
     {
@@ -724,6 +732,9 @@ class WorkOrderPage extends Component
     public function openDetailModal(string $id): void
     {
         $this->selectedWoId = $id;
+        $this->newComment = '';
+        $this->replyingToId = null;
+        $this->newReply = '';
         $this->selectedWorkOrder = WorkOrder::with([
             'equipment.reffEquip',
             'site',
@@ -731,6 +742,7 @@ class WorkOrderPage extends Component
             'assignedTo',
             'tasks.subtasks.mechanics',
             'tasks.subtasks.spareparts',
+            'comments.replies.user',
         ])->findOrFail($id);
         $this->showDetailModal = true;
     }
@@ -835,6 +847,80 @@ class WorkOrderPage extends Component
 
         if ($this->showDetailModal && $this->selectedWorkOrder) {
             $this->selectedWorkOrder->refresh();
+        }
+    }
+
+    public function postComment(): void
+    {
+        $this->validate(['newComment' => 'required|min:1|max:2000'], [
+            'newComment.required' => 'Komentar tidak boleh kosong.',
+        ]);
+
+        if (! $this->selectedWoId) {
+            return;
+        }
+
+        WorkOrderComment::create([
+            'work_order_id' => $this->selectedWoId,
+            'parent_id' => null,
+            'user_id' => Auth::id(),
+            'body' => trim($this->newComment),
+            'created_by' => Auth::id(),
+            'updated_by' => Auth::id(),
+        ]);
+
+        $this->newComment = '';
+        $this->selectedWorkOrder = WorkOrder::with([
+            'equipment.reffEquip', 'site', 'requester', 'assignedTo',
+            'tasks.subtasks.mechanics', 'tasks.subtasks.spareparts', 'comments.replies',
+        ])->findOrFail($this->selectedWoId);
+    }
+
+    public function startReply(string $commentId): void
+    {
+        $this->replyingToId = $this->replyingToId === $commentId ? null : $commentId;
+        $this->newReply = '';
+    }
+
+    public function postReply(): void
+    {
+        $this->validate(['newReply' => 'required|min:1|max:2000'], [
+            'newReply.required' => 'Balasan tidak boleh kosong.',
+        ]);
+
+        if (! $this->selectedWoId || ! $this->replyingToId) {
+            return;
+        }
+
+        WorkOrderComment::create([
+            'work_order_id' => $this->selectedWoId,
+            'parent_id' => $this->replyingToId,
+            'user_id' => Auth::id(),
+            'body' => trim($this->newReply),
+            'created_by' => Auth::id(),
+            'updated_by' => Auth::id(),
+        ]);
+
+        $this->newReply = '';
+        $this->replyingToId = null;
+        $this->selectedWorkOrder = WorkOrder::with([
+            'equipment.reffEquip', 'site', 'requester', 'assignedTo',
+            'tasks.subtasks.mechanics', 'tasks.subtasks.spareparts', 'comments.replies',
+        ])->findOrFail($this->selectedWoId);
+    }
+
+    public function deleteComment(string $commentId): void
+    {
+        $comment = WorkOrderComment::findOrFail($commentId);
+        if ($comment->user_id === Auth::id() || Auth::user()?->hasRole('admin')) {
+            $comment->delete();
+        }
+
+        if ($this->selectedWoId) {
+            $this->selectedWorkOrder = WorkOrder::with([
+                'equipment.reffEquip', 'site', 'requester', 'assignedTo',
+                'tasks.subtasks.mechanics', 'tasks.subtasks.spareparts', 'comments.replies',
+            ])->findOrFail($this->selectedWoId);
         }
     }
 

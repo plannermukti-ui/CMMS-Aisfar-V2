@@ -130,12 +130,10 @@
                         <tr>
                             <th>No. Work Order</th>
                             <th>Unit & Status Unit</th>
-                            <th>Problem, Action & Kendala</th>
-                            <th>Tipe & Opportunity</th>
-                            <th>Waktu Breakdown & Ready</th>
-                            <th>Personel Mekanik</th>
+                            <th>Problem & Action</th>
+                            <th>Tipe & Prioritas</th>
+                            <th>Waktu BD & Ready</th>
                             <th>Status WO</th>
-                            <th class="text-end pe-4">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="fw-semibold text-gray-700">
@@ -252,98 +250,11 @@
                                     </div>
                                 </td>
 
-                                <!-- Mechanics Assignment -->
-                                <td>
-                                    <div class="d-flex flex-column gap-1">
-                                        @php
-                                            $allAssignedUsers = collect();
-                                            foreach($wo->tasks as $t) {
-                                                foreach($t->subtasks as $st) {
-                                                    if ($st->assignedTo) $allAssignedUsers->push($st->assignedTo);
-                                                    foreach($st->mechanics as $m) $allAssignedUsers->push($m);
-                                                }
-                                            }
-                                            $allAssignedUsers = $allAssignedUsers->unique('id');
-                                        @endphp
-
-                                        @if($allAssignedUsers->count() > 0)
-                                            <div class="d-flex align-items-center">
-                                                <div class="symbol symbol-30px symbol-circle me-2">
-                                                    <div class="symbol-label bg-light-info text-info fw-bold fs-8">
-                                                        {{ strtoupper(substr($allAssignedUsers->first()->full_name ?? 'U', 0, 1)) }}
-                                                    </div>
-                                                </div>
-                                                <div class="d-flex flex-column">
-                                                    <span class="fs-8 fw-bold text-gray-900">{{ $allAssignedUsers->first()->full_name }}</span>
-                                                    @if($allAssignedUsers->count() > 1)
-                                                        <span class="fs-9 text-muted">+{{ $allAssignedUsers->count() - 1 }} teknisi lainnya</span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        @else
-                                            <span class="text-muted fs-8">Belum ditugaskan</span>
-                                        @endif
-                                    </div>
-                                </td>
-
                                 <!-- Status -->
                                 <td>
                                     <span class="badge {{ $wo->status_badge['class'] }} fs-7 fw-bold px-3 py-1">
                                         {{ $wo->status_badge['label'] }}
                                     </span>
-                                </td>
-
-                                <!-- Actions -->
-                                <td class="text-end pe-4">
-                                    <div class="d-inline-flex gap-1">
-                                        <button
-                                            type="button"
-                                            wire:click="openDetailModal('{{ $wo->id }}')"
-                                            class="btn btn-icon btn-sm btn-light-primary"
-                                            title="Lihat Detail"
-                                        >
-                                            <i class="ki-outline ki-eye fs-4"></i>
-                                        </button>
-
-                                        @if($wo->status === 'open')
-                                            <button
-                                                type="button"
-                                                wire:click="startWork('{{ $wo->id }}')"
-                                                class="btn btn-sm btn-light-warning fw-semibold fs-8"
-                                                title="Mulai Pengerjaan"
-                                            >
-                                                Mulai
-                                            </button>
-                                        @elseif($wo->status === 'in_progress')
-                                            <button
-                                                type="button"
-                                                wire:click="openCompleteModal('{{ $wo->id }}')"
-                                                class="btn btn-sm btn-light-success fw-semibold fs-8"
-                                                title="Selesaikan Pekerjaan"
-                                            >
-                                                Selesai
-                                            </button>
-                                        @endif
-
-                                        <button
-                                            type="button"
-                                            wire:click="openEditModal('{{ $wo->id }}')"
-                                            class="btn btn-icon btn-sm btn-light"
-                                            title="Edit"
-                                        >
-                                            <i class="ki-outline ki-pencil fs-4"></i>
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            wire:click="deleteWorkOrder('{{ $wo->id }}')"
-                                            wire:confirm="Apakah Anda yakin ingin menghapus Work Order ini beserta seluruh Task, Subtask, dan Sparepart turunannya?"
-                                            class="btn btn-icon btn-sm btn-light-danger"
-                                            title="Hapus Work Order"
-                                        >
-                                            <i class="ki-outline ki-trash fs-4"></i>
-                                        </button>
-                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -1241,16 +1152,205 @@
                                             <span class="fs-8 text-muted d-block mb-1">Sesudah Perbaikan (After)</span>
                                             <a href="{{ asset('storage/'.$selectedWorkOrder->after_photo) }}" target="_blank">
                                                 <img src="{{ asset('storage/'.$selectedWorkOrder->after_photo) }}" class="img-fluid rounded-3 border" style="max-height: 180px; object-fit: cover;" />
-                                            </a>
+                            </a>
                                         </div>
                                     @endif
                                 </div>
                             </div>
                         @endif
+                        <!-- ========================================================== -->
+                        <!-- 💬 DISKUSI & KOMUNIKASI WORK ORDER (Facebook Style)          -->
+                        <!-- ========================================================== -->
+                        <div class="separator my-5"></div>
+
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="symbol symbol-30px symbol-circle bg-primary me-2.5 d-flex align-items-center justify-content-center">
+                                    <i class="ki-outline ki-message-text-2 fs-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fs-6 fw-bolder text-gray-900 mb-0">Diskusi & Komunikasi</h5>
+                                    <span class="text-muted fs-9">Obrolan tim terkait Work Order ini</span>
+                                </div>
+                            </div>
+
+                            {{-- Input Komentar Baru --}}
+                            <div class="d-flex align-items-start gap-3 mb-5">
+                                <div class="symbol symbol-38px symbol-circle flex-shrink-0">
+                                    <div class="symbol-label fs-7 fw-bolder bg-primary text-white">
+                                        {{ strtoupper(substr(Auth::user()?->full_name ?? 'U', 0, 2)) }}
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="bg-light rounded-3 p-3 border">
+                                        <textarea
+                                            wire:model="newComment"
+                                            class="form-control form-control-solid border-0 bg-transparent fs-7 p-0 resize-none"
+                                            rows="2"
+                                            placeholder="Tulis komentar atau update terkait Work Order ini... (Contoh: Sparepart sudah tiba, estimasi selesai 3 jam)"
+                                        ></textarea>
+                                    </div>
+                                    @error('newComment')
+                                        <span class="text-danger fs-9 mt-1 d-block">{{ $message }}</span>
+                                    @enderror
+                                    <div class="d-flex justify-content-end mt-2">
+                                        <button
+                                            type="button"
+                                            wire:click="postComment"
+                                            class="btn btn-primary btn-sm fs-8 fw-bold"
+                                        >
+                                            <i class="ki-outline ki-send fs-6 me-1"></i> Kirim Komentar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- List Komentar --}}
+                            @php $comments = $selectedWorkOrder->comments ?? collect(); @endphp
+
+                            @if($comments->count() > 0)
+                                <div class="d-flex flex-column gap-4">
+                                    @foreach($comments as $comment)
+                                        {{-- Post Utama --}}
+                                        <div class="d-flex align-items-start gap-3" id="comment-{{ $comment->id }}">
+                                            <div class="symbol symbol-38px symbol-circle flex-shrink-0">
+                                                <div class="symbol-label fs-8 fw-bolder bg-info text-white">
+                                                    {{ $comment->initials }}
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="bg-light-primary bg-opacity-50 rounded-3 px-4 py-3 border border-primary border-opacity-15">
+                                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                                        <div>
+                                                            <span class="fw-bolder text-gray-900 fs-7">{{ $comment->user?->full_name ?? 'User' }}</span>
+                                                            <span class="text-muted fs-9 ms-2">{{ $comment->user?->position?->name ?? '' }}</span>
+                                                        </div>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <span class="text-muted fs-9">{{ $comment->time_ago }}</span>
+                                                            @if($comment->user_id === Auth::id())
+                                                                <button
+                                                                    type="button"
+                                                                    wire:click="deleteComment('{{ $comment->id }}')"
+                                                                    wire:confirm="Hapus komentar ini?"
+                                                                    class="btn btn-xs btn-icon btn-light-danger"
+                                                                    title="Hapus"
+                                                                >
+                                                                    <i class="ki-outline ki-trash fs-9"></i>
+                                                                </button>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <p class="text-gray-800 fs-7 mb-0" style="white-space: pre-wrap;">{{ $comment->body }}</p>
+                                                </div>
+
+                                                {{-- Tombol Balas --}}
+                                                <div class="d-flex align-items-center gap-3 mt-1 ps-2">
+                                                    <button
+                                                        type="button"
+                                                        wire:click="startReply('{{ $comment->id }}')"
+                                                        class="btn btn-xs btn-link text-muted text-hover-primary p-0 fs-9 fw-semibold"
+                                                    >
+                                                        <i class="ki-outline ki-message-text-2 fs-9 me-1"></i>
+                                                        {{ $replyingToId === $comment->id ? 'Batal Balas' : 'Balas' }}
+                                                    </button>
+                                                    @if($comment->replies->count() > 0)
+                                                        <span class="text-muted fs-9">{{ $comment->replies->count() }} balasan</span>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Form Balas --}}
+                                                @if($replyingToId === $comment->id)
+                                                    <div class="d-flex align-items-start gap-2 mt-3 ms-2">
+                                                        <div class="symbol symbol-30px symbol-circle flex-shrink-0">
+                                                            <div class="symbol-label fs-9 fw-bolder bg-warning text-white">
+                                                                {{ strtoupper(substr(Auth::user()?->full_name ?? 'U', 0, 2)) }}
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <div class="bg-light rounded-3 px-3 py-2 border">
+                                                                <textarea
+                                                                    wire:model="newReply"
+                                                                    class="form-control form-control-solid border-0 bg-transparent fs-8 p-0 resize-none"
+                                                                    rows="2"
+                                                                    placeholder="Tulis balasan..."
+                                                                    autofocus
+                                                                ></textarea>
+                                                            </div>
+                                                            @error('newReply')
+                                                                <span class="text-danger fs-9 mt-1 d-block">{{ $message }}</span>
+                                                            @enderror
+                                                            <div class="d-flex justify-content-end mt-1">
+                                                                <button
+                                                                    type="button"
+                                                                    wire:click="postReply"
+                                                                    class="btn btn-primary btn-xs fs-9 fw-bold"
+                                                                >
+                                                                    <i class="ki-outline ki-send fs-9 me-1"></i> Kirim Balasan
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                {{-- Replies / Balasan --}}
+                                                @if($comment->replies->count() > 0)
+                                                    <div class="ms-4 mt-3 d-flex flex-column gap-3">
+                                                        @foreach($comment->replies as $reply)
+                                                            <div class="d-flex align-items-start gap-2">
+                                                                <div class="symbol symbol-30px symbol-circle flex-shrink-0">
+                                                                    <div class="symbol-label fs-9 fw-bolder bg-light-success text-success">
+                                                                        {{ $reply->initials }}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="flex-grow-1">
+                                                                    <div class="bg-white rounded-3 px-3 py-2 border border-gray-200">
+                                                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                            <div>
+                                                                                <span class="fw-bolder text-gray-900 fs-8">{{ $reply->user?->full_name ?? 'User' }}</span>
+                                                                            </div>
+                                                                            <div class="d-flex align-items-center gap-2">
+                                                                                <span class="text-muted fs-9">{{ $reply->time_ago }}</span>
+                                                                                @if($reply->user_id === Auth::id())
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        wire:click="deleteComment('{{ $reply->id }}')"
+                                                                                        wire:confirm="Hapus balasan ini?"
+                                                                                        class="btn btn-xs btn-icon btn-light-danger"
+                                                                                        title="Hapus"
+                                                                                    >
+                                                                                        <i class="ki-outline ki-trash fs-9"></i>
+                                                                                    </button>
+                                                                                @endif
+                                                                            </div>
+                                                                        </div>
+                                                                        <p class="text-gray-800 fs-8 mb-0" style="white-space: pre-wrap;">{{ $reply->body }}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-6">
+                                    <div class="symbol symbol-60px symbol-circle bg-light-primary mx-auto mb-3">
+                                        <div class="symbol-label">
+                                            <i class="ki-outline ki-message-text-2 fs-2x text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <p class="text-muted fs-7 mb-0">Belum ada diskusi untuk Work Order ini.</p>
+                                    <p class="text-muted fs-9">Tulis komentar pertama untuk memulai obrolan tim!</p>
+                                </div>
+                            @endif
+                        </div>
                     </div>
 
-                    <div class="modal-footer border-top py-3 px-6 d-flex justify-content-between">
-                        <div>
+                    {{-- Modal Footer: Workflow Actions + Edit + Delete + Close --}}
+                    <div class="modal-footer border-top py-3 px-6 d-flex justify-content-between flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
                             @if($selectedWorkOrder->status === 'open')
                                 <button type="button" wire:click="startWork('{{ $selectedWorkOrder->id }}')" class="btn btn-warning btn-sm fs-7">
                                     <i class="ki-outline ki-time fs-4 me-1"></i> Mulai Pekerjaan
@@ -1264,12 +1364,35 @@
                                     <i class="ki-outline ki-verify fs-4 me-1"></i> Verifikasi & Close WO
                                 </button>
                             @endif
+
+                            <div class="separator separator-vertical h-25px mx-1 d-none d-sm-block"></div>
+
+                            <button
+                                type="button"
+                                wire:click="openEditModal('{{ $selectedWorkOrder->id }}')"
+                                class="btn btn-sm btn-light fw-semibold fs-8"
+                            >
+                                <i class="ki-outline ki-pencil fs-6 me-1"></i> Edit WO
+                            </button>
+
+                            <button
+                                type="button"
+                                wire:click="deleteWorkOrder('{{ $selectedWorkOrder->id }}')"
+                                wire:confirm="Hapus Work Order ini beserta semua data terkait?"
+                                class="btn btn-sm btn-light-danger fw-semibold fs-8"
+                            >
+                                <i class="ki-outline ki-trash fs-6 me-1"></i> Hapus
+                            </button>
                         </div>
-                        <button type="button" wire:click="$set('showDetailModal', false)" class="btn btn-light fs-7">Tutup</button>
+
+                        <button type="button" wire:click="$set('showDetailModal', false)" class="btn btn-light fs-7">
+                            <i class="ki-outline ki-cross fs-6 me-1"></i> Tutup
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     @endif
     <!--end::Modal Detail WO-->
+
 </div>
