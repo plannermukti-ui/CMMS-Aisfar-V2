@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
@@ -61,6 +62,16 @@ class UserForm
                             ])
                             ->required()
                             ->default('pending'),
+                        CheckboxList::make('allowed_modules')
+                            ->label('Modul yang Diizinkan')
+                            ->options([
+                                'admin' => 'Admin Panel (Setting)',
+                                'plt' => 'PLANT Maintenance',
+                                'scm' => 'SCM Logistics',
+                            ])
+                            ->columns(3)
+                            ->columnSpanFull()
+                            ->helperText('Pilih modul mana saja yang bisa diakses oleh user ini.'),
                     ])->columns(2),
 
                 Section::make('Biodata Karyawan')

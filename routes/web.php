@@ -30,7 +30,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // PLANT Maintenance Module Routes (/plt)
-Route::middleware(['auth'])->prefix('plt')->group(function () {
+Route::middleware(['auth', 'module_access:plt'])->prefix('plt')->group(function () {
     Route::get('/', function () {
         return redirect('/plt/dashboard');
     });
@@ -49,7 +49,7 @@ Route::middleware(['auth'])->prefix('plt')->group(function () {
 });
 
 // SCM Logistics Module Routes (/scm)
-Route::middleware(['auth'])->prefix('scm')->group(function () {
+Route::middleware(['auth', 'module_access:scm'])->prefix('scm')->group(function () {
     Route::get('/', function () {
         return redirect('/scm/dashboard');
     });

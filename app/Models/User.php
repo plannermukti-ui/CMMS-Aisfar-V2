@@ -16,7 +16,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 
-#[Fillable(['username', 'full_name', 'name', 'email', 'password', 'status', 'bio', 'photo', 'department_id', 'position_id', 'nik', 'join_year', 'date_of_birth', 'phone', 'address', 'gender', 'created_by', 'updated_by'])]
+#[Fillable(['username', 'full_name', 'name', 'email', 'password', 'status', 'bio', 'photo', 'department_id', 'position_id', 'nik', 'join_year', 'date_of_birth', 'phone', 'address', 'gender', 'allowed_modules', 'created_by', 'updated_by'])]
 #[Hidden(['password', 'remember_token', 'deleted_at'])]
 class User extends Authenticatable implements FilamentUser, HasName
 {
@@ -118,6 +118,7 @@ class User extends Authenticatable implements FilamentUser, HasName
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'allowed_modules' => 'array',
         ];
     }
 }

@@ -113,6 +113,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 RedirectNonAdmins::class,
+                'module_access:admin',
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
