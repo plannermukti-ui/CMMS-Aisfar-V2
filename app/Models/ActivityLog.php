@@ -20,6 +20,11 @@ class ActivityLog extends BaseModel
         ];
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public static function log(string $action, string $module, Model $model, ?array $oldValues = null)
     {
         self::create([

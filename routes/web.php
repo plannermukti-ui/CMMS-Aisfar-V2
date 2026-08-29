@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\User\ProfileController;
+use App\Livewire\Plt\ActivityLogPage;
 use App\Livewire\Plt\CcrPage;
 use App\Livewire\Plt\ComponentTrackerPage;
 use App\Livewire\Plt\DashboardPage as PltDashboardPage;
@@ -43,6 +44,7 @@ Route::middleware(['auth'])->prefix('plt')->group(function () {
     Route::get('/ccr', CcrPage::class)->name('plt.ccr');
     Route::get('/far', FarPage::class)->name('plt.far');
     Route::get('/osr', OsrPage::class)->name('plt.osr');
+    Route::get('/activity-log', ActivityLogPage::class)->name('plt.activity-log');
     Route::get('/chat', function () {
         return redirect('/chat');
     })->name('plt.chat');

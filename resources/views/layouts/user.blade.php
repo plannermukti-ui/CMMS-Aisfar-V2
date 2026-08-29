@@ -76,7 +76,31 @@
             --kt-primary-active: {{ $primaryColor }};
         }
         body { font-family: "{{ $fontFamily }}", sans-serif; background-color: #f8fafc; }
-        
+
+        /* ── Page transition ─────────────────────────── */
+        #kt_app_content { will-change: opacity, transform; }
+
+        /* ── Livewire wire:loading button state ─────── */
+        [wire\:loading][wire\:target],
+        button[wire\:loading] { opacity: 0.75; pointer-events: none; cursor: not-allowed; }
+
+        /* ── Toast slide-in animation ────────────────── */
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+
+        /* ── Button wire:loading spinner ─────────────── */
+        .btn-loading-state { position: relative; pointer-events: none; }
+        .btn-loading-state::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: inherit;
+            border-radius: inherit;
+            opacity: 0.6;
+        }
+
+
         /* Base Slim Sidebar Layout */
         .app-sidebar.slim-sidebar {
             width: 90px !important;
@@ -396,6 +420,11 @@
                         <span>OSR Outside</span>
                     </a>
 
+                    <a href="{{ route('plt.activity-log') }}" class="menu-item {{ request()->routeIs('plt.activity-log') ? 'active' : '' }}" title="Activity Log Sistem">
+                        <i class="ki-outline ki-shield-tick"></i>
+                        <span>Log</span>
+                    </a>
+
                     <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" title="Profiles Mekanik">
                         <i class="ki-outline ki-profile-circle"></i>
                         <span>Profiles</span>
@@ -609,6 +638,111 @@
     @if(!request()->routeIs('chat') && !request()->routeIs('plt.chat') && !request()->routeIs('user.chat'))
         @livewire('floating-chat')
     @endif
+
+    {{-- ══════════════════════════════════════════════════════
+         GLOBAL UX ENHANCEMENTS:
+         1. Page Transition (fade+slide on navigation)
+         2. Livewire global loading overlay
+         3. Form submit spinner
+         4. Flash toast notifications
+    ══════════════════════════════════════════════════════ --}}
+    <script>
+    // ── 1. PAGE TRANSITION ────────────────────────────────────
+    (function () {
+        const content = document.getElementById('kt_app_content');
+        if (!content) return;
+
+        // Fade-in on initial load
+        content.style.opacity = '0';
+        content.style.transform = 'translateY(10px)';
+        content.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                content.style.opacity = '1';
+                content.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Fade-out on link click (non-Livewire)
+        document.addEventListener('click', function (e) {
+            const anchor = e.target.closest('a[href]');
+            if (!anchor) return;
+            const href = anchor.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('javascript') || anchor.target === '_blank') return;
+            if (anchor.closest('[wire\\:click]') || anchor.hasAttribute('wire:navigate')) return;
+            content.style.opacity = '0';
+            content.style.transform = 'translateY(-6px)';
+        });
+    })();
+
+    // ── 2. LIVEWIRE GLOBAL LOADING BAR ───────────────────────
+    const loadingBar = document.createElement('div');
+    loadingBar.id = 'cmms-loading-bar';
+    loadingBar.style.cssText = [
+        'position:fixed;top:0;left:0;height:3px;width:0%;z-index:99999',
+        'background:linear-gradient(90deg,#009EF7,#00c6ff,#009EF7)',
+        'background-size:200% 100%;transition:width 0.4s ease',
+        'animation:shimmer 1.5s linear infinite',
+        'display:none;border-radius:0 2px 2px 0',
+    ].join(';');
+    document.body.appendChild(loadingBar);
+
+    const style = document.createElement('style');
+    style.textContent = '@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}';
+    document.head.appendChild(style);
+
+    let loadingTimer;
+    document.addEventListener('livewire:request', () => {
+        clearTimeout(loadingTimer);
+        loadingBar.style.display = 'block';
+        loadingBar.style.width = '30%';
+        loadingTimer = setTimeout(() => { loadingBar.style.width = '70%'; }, 300);
+    });
+    document.addEventListener('livewire:response', () => {
+        clearTimeout(loadingTimer);
+        loadingBar.style.width = '100%';
+        setTimeout(() => {
+            loadingBar.style.opacity = '0';
+            setTimeout(() => { loadingBar.style.display = 'none'; loadingBar.style.width = '0'; loadingBar.style.opacity = '1'; }, 400);
+        }, 300);
+    });
+
+    // ── 3. FORM SUBMIT SPINNER ───────────────────────────────
+    document.addEventListener('submit', function (e) {
+        const form = e.target;
+        const btn = form.querySelector('[type="submit"]');
+        if (!btn) return;
+        btn.setAttribute('disabled', 'disabled');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Memproses...';
+        // Re-enable after 8s fallback
+        setTimeout(() => {
+            btn.removeAttribute('disabled');
+            btn.innerHTML = originalHtml;
+        }, 8000);
+    });
+
+    // ── 4. LIVEWIRE TOAST FLASH ──────────────────────────────
+    document.addEventListener('livewire:initialized', () => {
+        Livewire.on('notify', (data) => {
+            if (typeof KTAlertDialog === 'undefined') return;
+            const { message, type } = data[0] || {};
+            const toastEl = document.createElement('div');
+            const bgMap = { success:'#50cd89', danger:'#f1416c', warning:'#ffc700', info:'#009EF7' };
+            toastEl.style.cssText = [
+                'position:fixed;bottom:24px;right:24px;z-index:99999',
+                'background:'+(bgMap[type]||bgMap.info),
+                'color:#fff;padding:14px 20px;border-radius:10px',
+                'font-size:14px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.18)',
+                'animation:slideInRight .35s ease',
+                'max-width:360px;display:flex;align-items:center;gap:10px',
+            ].join(';');
+            toastEl.innerHTML = `<i class="ki-outline ki-${type==='success'?'check-circle':type==='danger'?'cross-circle':type==='warning'?'warning-2':'information-5'} fs-3 text-white"></i><span>${message||''}</span>`;
+            document.body.appendChild(toastEl);
+            setTimeout(() => { toastEl.style.opacity='0'; toastEl.style.transition='opacity .3s'; setTimeout(() => toastEl.remove(), 300); }, 4000);
+        });
+    });
+    </script>
 </body>
 </html>
 

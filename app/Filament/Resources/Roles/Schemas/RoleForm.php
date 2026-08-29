@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\Roles\Schemas;
 
-use Filament\Forms\Components\Select;
+use App\Models\Permission;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Collection;
 
 class RoleForm
 {
@@ -14,17 +17,80 @@ class RoleForm
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label('Role Key')
                     ->required()
-                    ->unique(ignoreRecord: true),
+                    ->unique(ignoreRecord: true)
+                    ->helperText('e.g. admin, mechanic, supervisor — gunakan huruf kecil'),
+
                 TextInput::make('display_name')
+                    ->label('Nama Role')
                     ->required(),
+
                 Textarea::make('description')
+                    ->label('Deskripsi Role')
                     ->columnSpanFull(),
-                Select::make('permissions')
-                    ->multiple()
-                    ->relationship('permissions', 'display_name')
-                    ->preload()
-                    ->columnSpanFull(),
+
+                Section::make('🔐 Hak Akses per Modul (CRUD)')
+                    ->description('Pilih aksi yang diperbolehkan untuk setiap modul sistem')
+                    ->columnSpanFull()
+                    ->schema(self::buildPermissionSections()),
             ]);
+    }
+
+    /** Build one CheckboxList per permission category (module). */
+    private static function buildPermissionSections(): array
+    {
+        /** @var Collection<string, Collection> $grouped */
+        $grouped = Permission::orderBy('category')->orderBy('action')
+            ->get()
+            ->groupBy('category');
+
+        $moduleLabels = [
+            'workorder' => '📋 Work Order (PLANT)',
+            'component-tracker' => '⚙️ Component Tracker (PLANT)',
+            'ccr' => '📊 Kondisi Fisik / CCR (PLANT)',
+            'far' => '🔍 Failure Analysis / FAR (PLANT)',
+            'osr' => '🔧 Perbaikan Luar / OSR (PLANT)',
+            'scm-parts' => '📦 Master Parts (SCM)',
+            'scm-mol' => '🛒 Material Order / MOL (SCM)',
+            'scm-pr' => '📝 Purchase Request / PR (SCM)',
+            'scm-po' => '🏭 Purchase Order / PO (SCM)',
+            'scm-rfq' => '💬 Request for Quotation / RFQ (SCM)',
+            'scm-do' => '🚚 Delivery Order / DO (SCM)',
+            'scm-gr' => '✅ Goods Receipt / GR (SCM)',
+            'scm-opname' => '📊 Stock Opname (SCM)',
+            'equipment' => '🚜 Master Equipment',
+            'user' => '👤 User Management',
+            'role' => '🔐 Role & Permission',
+            'message' => '💬 Chat & Messenger',
+            'activity-log' => '📖 Activity Log',
+            'settings' => '⚙️ System Settings',
+        ];
+
+        $sections = [];
+
+        foreach ($grouped as $category => $permissions) {
+            $label = $moduleLabels[$category] ?? ucwords(str_replace('-', ' ', $category));
+            $options = $permissions->mapWithKeys(fn ($p) => [$p->id => ucfirst($p->action)]);
+
+            $actionOrder = ['view' => 0, 'create' => 1, 'edit' => 2, 'delete' => 3, 'approve' => 4, 'assign' => 5];
+            $sortedOptions = $options->sortBy(fn ($label, $id) => $actionOrder[
+                $permissions->firstWhere('id', $id)?->action ?? 'view'
+            ] ?? 99)->toArray();
+
+            $sections[] = Section::make($label)
+                ->columnSpanFull()
+                ->schema([
+                    CheckboxList::make('permissions')
+                        ->label('')
+                        ->relationship('permissions', 'display_name')
+                        ->options($sortedOptions)
+                        ->columns(4)
+                        ->bulkToggleable()
+                        ->gridDirection('row'),
+                ]);
+        }
+
+        return $sections;
     }
 }
