@@ -4,9 +4,9 @@ namespace App\Filament\Resources\Roles\Schemas;
 
 use App\Models\Permission;
 use Filament\Forms\Components\CheckboxList;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Collection;
 
@@ -67,16 +67,17 @@ class RoleForm
             'settings' => '⚙️ System Settings',
         ];
 
+        $actionOrder = ['view' => 0, 'create' => 1, 'edit' => 2, 'delete' => 3, 'approve' => 4, 'assign' => 5];
+
         $sections = [];
 
         foreach ($grouped as $category => $permissions) {
             $label = $moduleLabels[$category] ?? ucwords(str_replace('-', ' ', $category));
-            $options = $permissions->mapWithKeys(fn ($p) => [$p->id => ucfirst($p->action)]);
 
-            $actionOrder = ['view' => 0, 'create' => 1, 'edit' => 2, 'delete' => 3, 'approve' => 4, 'assign' => 5];
-            $sortedOptions = $options->sortBy(fn ($label, $id) => $actionOrder[
-                $permissions->firstWhere('id', $id)?->action ?? 'view'
-            ] ?? 99)->toArray();
+            $options = $permissions
+                ->sortBy(fn ($p) => $actionOrder[$p->action] ?? 99)
+                ->mapWithKeys(fn ($p) => [$p->id => ucfirst($p->action)])
+                ->toArray();
 
             $sections[] = Section::make($label)
                 ->columnSpanFull()
@@ -84,7 +85,7 @@ class RoleForm
                     CheckboxList::make('permissions')
                         ->label('')
                         ->relationship('permissions', 'display_name')
-                        ->options($sortedOptions)
+                        ->options($options)
                         ->columns(4)
                         ->bulkToggleable()
                         ->gridDirection('row'),

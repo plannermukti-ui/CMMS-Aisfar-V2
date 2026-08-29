@@ -420,11 +420,6 @@
                         <span>OSR Outside</span>
                     </a>
 
-                    <a href="{{ route('plt.activity-log') }}" class="menu-item {{ request()->routeIs('plt.activity-log') ? 'active' : '' }}" title="Activity Log Sistem">
-                        <i class="ki-outline ki-shield-tick"></i>
-                        <span>Log</span>
-                    </a>
-
                     <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" title="Profiles Mekanik">
                         <i class="ki-outline ki-profile-circle"></i>
                         <span>Profiles</span>
