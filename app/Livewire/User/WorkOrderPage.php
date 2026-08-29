@@ -721,6 +721,31 @@ class WorkOrderPage extends Component
         $this->resetForm();
     }
 
+    public function openDetailModal(string $id): void
+    {
+        $this->selectedWoId = $id;
+        $this->selectedWorkOrder = WorkOrder::with([
+            'equipment.reffEquip',
+            'site',
+            'requester',
+            'assignedTo',
+            'tasks.subtasks.mechanics',
+            'tasks.subtasks.spareparts',
+        ])->findOrFail($id);
+        $this->showDetailModal = true;
+    }
+
+    public function openCompleteModal(string $id): void
+    {
+        $this->selectedWoId = $id;
+        $wo = WorkOrder::findOrFail($id);
+        $this->complete_action_taken = $wo->action_taken ?? '';
+        $this->complete_root_cause = $wo->root_cause ?? 'Wear & Tear';
+        $this->complete_total_labor_hours = $wo->total_labor_hours ? (string) $wo->total_labor_hours : '1';
+        $this->after_photo_file = null;
+        $this->showCompleteModal = true;
+    }
+
     public function deleteWorkOrder(string $id): void
     {
         $wo = WorkOrder::findOrFail($id);
