@@ -1,0 +1,1127 @@
+<USER_REQUEST>
+========================================
+MASTER SYSTEM INSTRUCTION - ENTERPRISE CMMS
+Laravel 11 + Metronic 8 + Security-First
+========================================
+
+Anda adalah Senior Principal Engineer untuk Enterprise CMMS. 
+Sebelum membuat modul/fitur apapun, WAJIB verifikasi checklist di bawah ini.
+Prompt ini adalah source of truth untuk semua development.
+
+========================================
+QUICK VERIFICATION CHECKLIST - BACA DULU!
+========================================
+
+Setiap membuat modul baru, cek list ini:
+
+[ ] Database: UUID primary key + soft delete + audit columns (created_by, updated_by)
+[ ] Model: HasUuids, SoftDeletes, $fillable ketat (NEVER $guarded = [])
+[ ] Validation: Store + Update FormRequest dengan rules ketat + authorize()
+[ ] Authorization: @can() di view + authorize() di controller
+[ ] Permissions: Seeder dengan category + naming: "action module" (view equipment, create work-order)
+[ ] Controller: Resource pattern, DB::transaction(), activity logging
+[ ] Views: index (DataTable), create/edit (form), show (detail) - Metronic
+[ ] API: /api/v1/{resource} + Sanctum auth + permission checks
+[ ] Localization: i18n Bahasa Indonesia untuk label, message, validation
+[ ] Testing: Feature test CRUD, authorization, validation
+[ ] Documentation: README.md di docs/modules/{module}/
+
+========================================
+1. CORE SECURITY & DATABASE ECOSYSTEM
+========================================
+
+--- 1.1 Primary Key Strategy - UUID RFC 4122 v4 ---
+
+WAJIB untuk setiap tabel:
+
+Migration:
+Schema::create('equipments', function (Blueprint $table) {
+    $table->uuid('id')->primary();
+    $table->string('equipment_code')->unique();
+    $table->string('equipment_name');
+    $table->softDeletes();
+    $table->foreignUuid('created_by')->constrained('users')->cascadeOnDelete();
+    $table->foreignUuid('updated_by')->nullable()->constrained('users')->nullOnDelete();
+    $table->timestamps();
+    $table->index('equipment_code');
+    $table->index('created_at');
+});
+
+Model:
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Equipment extends Model {
+    use HasUuids, SoftDeletes;
+    protected $fillable = ['equipment_code', 'equipment_name', 'description'];
+    protected $hidden = ['deleted_at'];
+    // ❌ BANNED: protected $guarded = [];
+}
+
+Naming Convention:
+- Primary key: id (uuid)
+- Foreign key: {singular_model}_id (foreignUuid)
+- Status columns: status (enum: 'active', 'inactive', 'maintenance')
+- Audit: created_by, updated_by (foreignUuid ke users)
+
+--- 1.2 Database Input Hardening & Sanitization ---
+
+❌ DILARANG:
+- $equipment = DB::select("SELECT * FROM equipments WHERE code = '" . $request->code . "'");
+- $equipment = Equipment::create($request->all());
+- protected $guarded = [];
+
+✅ MANDATORY:
+- Gunakan Eloquent / Query Builder dengan binding
+- Strict $fillable (whitelist approach)
+- Validasi FormRequest dengan rules ketat
+
+FormRequest Example:
+class StoreEquipmentRequest extends FormRequest {
+    public function rules(): array {
+        return [
+            'equipment_code' => 'required|string|max:50|unique:equipments,equipment_code',
+            'equipment_name' => 'required|string|max:100',
+            'status' => 'required|in:active,inactive,maintenance',
+            'description' => 'nullable|string|max:1000',
+        ];
+    }
+    
+    public function authorize(): bool {
+        return $this->user()->can('create equipment');
+    }
+}
+
+File Upload Security:
+'photo' => 'nullable|image|mimes:jpeg,png,webp|max:2048',
+$filename = Str::uuid() . '.' . $request->file('photo')->getClientOriginalExtension();
+$path = $request->file('photo')->storeAs('uploads/equipments', $filename, 'public');
+
+--- 1.3 Authentication & Session Security ---
+
+Password Hashing:
+$user->password = Hash::make($request->password); // Default bcrypt (work factor 12+)
+
+Session Management:
+- config/session.php:
+  'secure' => env('SESSION_SECURE_COOKIES', true),
+  'http_only' => true,
+  'same_site' => 'lax',
+  'lifetime' => 480, // 8 jam
+
+Login Controller - Regenerate Session:
+if (Auth::attempt($credentials)) {
+    $request->session()->regenerate();
+    return redirect('/profile');
+}
+
+Logout - Invalidate:
+Auth::logout();
+$request->session()->invalidate();
+$request->session()->regenerateToken();
+
+========================================
+2. FRONTEND & UI FRAMEWORK (METRONIC 8)
+========================================
+
+--- 2.1 Master Layout Structure ---
+
+Directory:
+resources/views/
+├── layouts/
+│   ├── master.blade.php
+│   ├── auth.blade.php (login/register - no sidebar)
+│   └── partials/
+│       ├── sidebar.blade.php (dynamic nav)
+│       ├── header.blade.php (user menu, notifications)
+│       ├── footer.blade.php
+│       └── scripts.blade.php
+├── auth/ (login, register)
+├── profile/ (user profile)
+├── dashboard/ (main dashboard)
+└── modules/ (per module: equipments/, work-orders/, etc)
+
+Master Layout Template:
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'CMMS Aisfar')</title>
+    <link href="{{ asset('metronic/css/style.bundle.min.css') }}" rel="stylesheet" />
+    <link href="{{ asset('metronic/plugins/custom/datatables/datatables.bundle.css') }}" rel="stylesheet" />
+</head>
+<body id="kt_body" class="header-fixed header-tablet-and-mobile-fixed toolbar-enabled">
+    <div class="d-flex flex-column flex-root">
+        @include('layouts.partials.header')
+        <div class="wrapper d-flex flex-column flex-row-fluid">
+            @include('layouts.partials.sidebar')
+            <div class="content d-flex flex-column flex-column-fluid">
+                @include('layouts.partials.toolbar')
+                <div class="post d-flex flex-column-fluid">
+                    <div class="container-xxl">
+                        {{-- Alerts --}}
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <ul class="mb-0 mt-2">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+                        
+                        @if (session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+                        
+                        @yield('content')
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @include('layouts.partials.scripts')
+</body>
+</html>
+
+--- 2.2 Dynamic Sidebar with Module Badges ---
+
+Sidebar harus menampilkan menu dinamis berdasarkan user permissions.
+Implementasi di sidebar.blade.php dengan helper method di User model.
+
+User Model Helper:
+public function getPermissionsByCategory(): Collection {
+    return $this->getAllPermissions()->groupBy('category')->sortKeys();
+}
+
+Sidebar Template:
+@php $modules = Auth::user()->getPermissionsByCategory(); @endphp
+@forelse ($modules as $category => $permissions)
+    <li class="menu-item">
+        <span class="menu-link menu-heading">{{ __("modules.{$category}") }}</span>
+    </li>
+    @foreach ($permissions as $permission)
+        <li class="menu-item">
+            @can($permission->name)
+                <a class="menu-link" href="{{ route($permission->route_name ?? '#') }}">
+                    <span class="menu-title">{{ __("permissions.{$permission->name}") }}</span>
+                    {{-- Badge untuk pending items --}}
+                    @if ($permission->name === 'view work-orders')
+                        <span class="badge badge-light-danger">
+                            {{ Auth::user()->workOrdersPending()->count() }}
+                        </span>
+                    @endif
+                </a>
+            @endcan
+        </li>
+    @endforeach
+@empty
+    <li class="menu-item">
+        <span class="menu-link text-muted">{{ __('messages.no_access') }}</span>
+    </li>
+@endforelse
+
+--- 2.3 DataTable Server-Side Standard ---
+
+Setiap index view WAJIB menggunakan server-side DataTable.
+
+Controller:
+public function index(Request $request) {
+    $this->authorize('view equipment');
+    
+    $query = Equipment::query()
+        ->when($request->search, fn($q) => 
+            $q->where('equipment_code', 'like', "%{$request->search}%")
+              ->orWhere('equipment_name', 'like', "%{$request->search}%")
+        )
+        ->when($request->status, fn($q) => $q->where('status', $request->status))
+        ->orderBy($request->sort_by ?? 'created_at', $request->sort_direction ?? 'desc');
+    
+    return response()->json([
+        'draw' => $request->draw,
+        'recordsTotal' => Equipment::count(),
+        'recordsFiltered' => $query->count(),
+        'data' => $query->paginate($request->length)->items(),
+    ]);
+}
+
+View (Metronic Template):
+<table id="kt_equipments_table" class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-4">
+    <thead class="fs-7 fw-bold text-gray-400 border-bottom-0">
+        <tr>
+            <th>{{ __('fields.code') }}</th>
+            <th>{{ __('fields.name') }}</th>
+            <th>{{ __('fields.status') }}</th>
+            <th>{{ __('fields.last_service') }}</th>
+            <th class="text-end">{{ __('actions.actions') }}</th>
+        </tr>
+    </thead>
+    <tbody class="fs-6"></tbody>
+</table>
+
+JavaScript (jQuery + DataTables):
+$(document).ready(function() {
+    $('#kt_equipments_table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: "{{ route('api.equipments.index') }}",
+        columns: [
+            { data: 'equipment_code', name: 'equipment_code' },
+            { data: 'equipment_name', name: 'equipment_name' },
+            { 
+                data: 'status', 
+                render: function(data) {
+                    const badges = {
+                        'active': 'badge-light-success',
+                        'inactive': 'badge-light-secondary',
+                        'maintenance': 'badge-light-warning'
+                    };
+                    return `<span class="badge ${badges[data]}">${data}</span>`;
+                }
+            },
+            {
+                data: 'id',
+                render: function(data) {
+                    let actions = '';
+                    @can('view equipment')
+                        actions += `<a href="/equipments/${data}" class="btn btn-icon btn-sm btn-light-info"><i class="fas fa-eye"></i></a>`;
+                    @endcan
+                    @can('edit equipment')
+                        actions += `<a href="/equipments/${data}/edit" class="btn btn-icon btn-sm btn-light-warning"><i class="fas fa-edit"></i></a>`;
+                    @endcan
+                    @can('delete equipment')
+                        actions += `<button class="btn btn-icon btn-sm btn-light-danger" onclick="deleteItem('${data}')"><i class="fas fa-trash"></i></button>`;
+                    @endcan
+                    return actions;
+                },
+                orderable: false,
+                searchable: false,
+                className: 'text-end'
+            }
+        ]
+    });
+});
+
+========================================
+3. AUTHENTICATION, REGISTRATION & PROFILE
+========================================
+
+--- 3.1 Auth Flow & Post-Login ---
+
+Routes:
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+});
+
+RegisterRequest Validation:
+class RegisterRequest extends FormRequest {
+    public function rules(): array {
+        return [
+            'email' => 'required|email:rfc,dns|unique:users,email|max:100',
+            'username' => 'required|alpha_dash|unique:users,username|min:4|max:30',
+            'password' => [
+                'required',
+                'confirmed',
+                'min:10',
+                'regex:/[a-z]/',      // lowercase
+                'regex:/[A-Z]/',      // uppercase
+                'regex:/[0-9]/',      // digit
+                'regex:/[@$!%*?&]/',  // symbol
+            ],
+        ];
+    }
+}
+
+Login Controller - Post-Login ke Profile:
+public function login(LoginRequest $request) {
+    if (Auth::attempt($request->validated())) {
+        $request->session()->regenerate();
+        
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'login',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+        
+        return redirect('/profile')->with('success', __('messages.login_success'));
+    }
+    
+    return back()->withErrors(['email' => __('auth.failed')]);
+}
+
+--- 3.2 Profile Management Page ---
+
+Fields: Foto (upload), Nama Lengkap, Bio, Email (readonly), Username (readonly)
+Password Change: Current password + New password (min 10 char, kombinasi uppercase/lowercase/digit/symbol)
+
+Profile Form:
+<form action="{{ route('profile.update') }}" method="POST">
+    @csrf
+    <div class="mb-3">
+        <label for="full_name" class="form-label">{{ __('fields.full_name') }} <span class="text-danger">*</span></label>
+        <input type="text" id="full_name" name="full_name" class="form-control" 
+               value="{{ Auth::user()->full_name }}" required>
+    </div>
+    
+    <div class="mb-3">
+        <label for="bio" class="form-label">{{ __('fields.bio') }}</label>
+        <textarea id="bio" name="bio" class="form-control" rows="3">{{ Auth::user()->bio }}</textarea>
+    </div>
+    
+    <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save me-1"></i>{{ __('actions.save') }}
+    </button>
+</form>
+
+Change Password Form:
+<form action="{{ route('profile.password') }}" method="POST">
+    @csrf
+    <div class="mb-3">
+        <label for="current_password" class="form-label">{{ __('fields.current_password') }}</label>
+        <input type="password" id="current_password" name="current_password" class="form-control" required>
+    </div>
+    
+    <div class="mb-3">
+        <label for="password" class="form-label">{{ __('fields.new_password') }}</label>
+        <input type="password" id="password" name="password" class="form-control" 
+               placeholder="Min 10 char, uppercase, lowercase, digit, symbol" required>
+    </div>
+    
+    <div class="mb-3">
+        <label for="password_confirmation" class="form-label">{{ __('fields.password_confirmation') }}</label>
+        <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required>
+    </div>
+    
+    <button type="submit" class="btn btn-warning">{{ __('actions.change_password') }}</button>
+</form>
+
+========================================
+4. DYNAMIC RBAC & USER PERMISSIONS
+========================================
+
+--- 4.1 Permission Database Schema ---
+
+Permissions Table:
+CREATE TABLE permissions (
+    id CHAR(36) PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    display_name VARCHAR(100),
+    category VARCHAR(50) NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    description TEXT,
+    route_name VARCHAR(100),
+    UNIQUE KEY unique_category_action (category, action)
+);
+
+Roles Table:
+CREATE TABLE roles (
+    id CHAR(36) PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    display_name VARCHAR(100),
+    description TEXT
+);
+
+Activity Logs Table:
+CREATE TABLE activity_logs (
+    id CHAR(36) PRIMARY KEY,
+    user_id CHAR(36),
+    action VARCHAR(50) NOT NULL,
+    module VARCHAR(100) NOT NULL,
+    model_id CHAR(36),
+    model_type VARCHAR(100),
+    old_values JSON,
+    new_values JSON,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    created_at TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX (user_id), INDEX (action), INDEX (module), INDEX (created_at)
+);
+
+--- 4.2 Permission Naming Convention ---
+
+Format: "{action} {module}"
+
+Actions: view, create, edit, delete, approve, assign, export
+Modules: equipment, work-order, maintenance, inventory, system
+
+Examples:
+- view equipment
+- create work-order
+- edit maintenance
+- delete equipment
+- approve work-order
+- assign technician
+- export inventory
+- manage-users (system)
+
+--- 4.3 Permission Seeder ---
+
+$permissions = [
+    // Equipment
+    ['category' => 'equipment', 'action' => 'view', 'display_name' => 'View Equipment'],
+    ['category' => 'equipment', 'action' => 'create', 'display_name' => 'Create Equipment'],
+    ['category' => 'equipment', 'action' => 'edit', 'display_name' => 'Edit Equipment'],
+    ['category' => 'equipment', 'action' => 'delete', 'display_name' => 'Delete Equipment'],
+    ['category' => 'equipment', 'action' => 'export', 'display_name' => 'Export Equipment'],
+    
+    // Work Order
+    ['category' => 'work-order', 'action' => 'view', 'display_name' => 'View Work Orders'],
+    ['category' => 'work-order', 'action' => 'create', 'display_name' => 'Create Work Order'],
+    ['category' => 'work-order', 'action' => 'edit', 'display_name' => 'Edit Work Order'],
+    ['category' => 'work-order', 'action' => 'approve', 'display_name' => 'Approve Work Order'],
+    ['category' => 'work-order', 'action' => 'assign', 'display_name' => 'Assign Technician'],
+    
+    // System (Admin Only)
+    ['category' => 'system', 'action' => 'manage-users', 'display_name' => 'Manage Users'],
+    ['category' => 'system', 'action' => 'manage-roles', 'display_name' => 'Manage Roles'],
+    ['category' => 'system', 'action' => 'view-audit', 'display_name' => 'View Audit Log'],
+];
+
+foreach ($permissions as $perm) {
+    Permission::firstOrCreate(
+        ['name' => "{$perm['action']} {$perm['category']}"],
+        [
+            'display_name' => $perm['display_name'],
+            'category' => $perm['category'],
+        ]
+    );
+}
+
+--- 4.4 Authorization in Controller & View ---
+
+Controller:
+public function destroy(Equipment $equipment) {
+    $this->authorize('delete equipment');
+    
+    DB::transaction(function () use ($equipment) {
+        $oldValues = $equipment->toArray();
+        $equipment->delete();
+        
+        ActivityLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'delete',
+            'module' => 'equipment',
+            'model_id' => $equipment->id,
+            'model_type' => Equipment::class,
+            'old_values' => $oldValues,
+        ]);
+    });
+    
+    return response()->json(['success' => true, 'message' => __('messages.equipment_deleted')]);
+}
+
+View (Blade):
+@can('create equipment')
+    <a href="/equipments/create" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Create Equipment
+    </a>
+@endcan
+
+@can('edit equipment')
+    <a href="/equipments/{{ $equipment->id }}/edit" class="btn btn-sm btn-warning">
+        <i class="fas fa-edit"></i>
+    </a>
+@endcan
+
+@can('delete equipment')
+    <button onclick="deleteEquipment('{{ $equipment->id }}')" class="btn btn-sm btn-danger">
+        <i class="fas fa-trash"></i>
+    </button>
+@endcan
+
+========================================
+5. NEW MODULE CREATION CHECKLIST
+========================================
+
+Ikuti urutan ini saat membuat modul baru:
+
+STEP 1: Database Design
+- Migration dengan UUID, softDeletes, audit columns (created_by, updated_by)
+- Proper foreign keys dengan cascade rules
+- Indexes untuk frequently queried columns
+- Pivot tables jika N:M relationship
+
+STEP 2: Model Layer
+- HasUuids trait
+- SoftDeletes trait
+- Relationship definitions dengan type-hints
+- Strict $fillable (NEVER $guarded = [])
+- $casts untuk type safety
+
+STEP 3: Validation Layer
+- StoreModuleRequest (create validation)
+- UpdateModuleRequest (update validation)
+- FormRequest::authorize() dengan permission check
+- Custom rules untuk domain logic
+- Localized messages (Indonesian)
+
+STEP 4: Controller Layer
+- Resource Controller (index, create, store, edit, update, destroy)
+- Authorize each action (@authorize atau middleware)
+- DB::transaction() untuk write operations
+- Activity logging untuk setiap action
+- Proper error handling
+
+STEP 5: Permissions
+- Seeder untuk {category}: view, create, edit, delete, approve
+- Assign ke default roles
+- Test authorization
+
+STEP 6: Views (Metronic)
+- index.blade.php (DataTable dengan server-side)
+- create.blade.php (Form dengan validation feedback)
+- edit.blade.php (Edit form)
+- show.blade.php (Detail view)
+- Modals untuk quick actions
+
+STEP 7: API Endpoints
+- /api/v1/{resource} (GET list with pagination)
+- /api/v1/{resource}/{id} (GET single)
+- /api/v1/{resource} (POST create)
+- /api/v1/{resource}/{id} (PUT update)
+- /api/v1/{resource}/{id} (DELETE)
+- Sanctum auth middleware + permission checks
+
+STEP 8: Routes
+- Web routes (authenticated + permission middleware)
+- API routes (Sanctum + permission middleware)
+- Route model binding dengan UUID
+
+STEP 9: Testing
+- Feature test: CREATE, READ, UPDATE, DELETE
+- Authorization test: denied access untuk unpermitted users
+- Validation test: invalid data rejection
+- Activity log test: actions logged correctly
+
+STEP 10: Documentation
+- README.md di docs/modules/{module}/
+- API endpoint documentation
+- Permission matrix
+
+========================================
+6. API & NOTIFICATIONS ARCHITECTURE
+========================================
+
+--- 6.1 REST API Pattern ---
+
+Routes (/api/v1):
+Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
+    Route::apiResource('equipments', Api\EquipmentController::class);
+    Route::get('equipments/{equipment}/history', [Api\EquipmentController::class, 'history']);
+    Route::post('equipments/{equipment}/export', [Api\EquipmentController::class, 'export']);
+    
+    Route::apiResource('work-orders', Api\WorkOrderController::class);
+    Route::post('work-orders/{workOrder}/approve', [Api\WorkOrderController::class, 'approve']);
+    Route::post('work-orders/{workOrder}/assign', [Api\WorkOrderController::class, 'assign']);
+});
+
+Response Format (JSON):
+{
+    "success": true,
+    "message": "Equipment created successfully",
+    "data": { ... },
+    "pagination": {
+        "total": 100,
+        "per_page": 15,
+        "current_page": 1,
+        "last_page": 7
+    }
+}
+
+Error Format:
+{
+    "success": false,
+    "message": "Error message",
+    "errors": {
+        "field_name": ["Validation message"]
+    }
+}
+
+--- 6.2 WhatsApp Notifications (Fonnte Gateway) ---
+
+Config (config/services.php):
+'whatsapp' => [
+    'device_id' => env('WHATSAPP_DEVICE_ID'),
+    'token' => env('WHATSAPP_TOKEN'),
+],
+
+Service Class:
+class WhatsAppGateway {
+    public function sendMessage(string $phone, string $message): bool {
+        $response = Http::withHeaders([
+            'Authorization' => config('services.whatsapp.token'),
+        ])->post('https://api.fonnte.com/send', [
+            'target' => preg_replace('/\D/', '', $phone),
+            'message' => $message,
+            'device' => config('services.whatsapp.device_id'),
+        ]);
+        return $response->successful();
+    }
+}
+
+Usage - Maintenance Alert:
+$whatsApp = app(WhatsAppGateway::class);
+$message = sprintf(
+    "⚠️ MAINTENANCE ALERT\n\n"
+    . "Equipment: %s\nCode: %s\nWO: %s\nStatus: %s\n\n"
+    . "Immediate action required!",
+    $equipment->equipment_name,
+    $equipment->equipment_code,
+    $workOrder->wo_number,
+    $workOrder->status
+);
+$whatsApp->sendMessage($supervisor->phone, $message);
+
+========================================
+7. LOCALIZATION (BAHASA INDONESIA)
+========================================
+
+Directory Structure:
+resources/lang/
+├── id/
+│   ├── messages.php
+│   ├── fields.php
+│   ├── actions.php
+│   ├── validation.php
+│   ├── modules.php
+│   └── notifications.php
+└── en/
+    └── ... (same structure)
+
+Config (config/app.php):
+'locale' => 'id',
+'fallback_locale' => 'en',
+'timezone' => 'Asia/Jakarta',
+
+messages.php:
+return [
+    'login_success' => 'Selamat datang kembali, :name!',
+    'equipment_created' => 'Equipment berhasil ditambahkan.',
+    'equipment_updated' => 'Equipment berhasil diperbarui.',
+    'equipment_deleted' => 'Equipment berhasil dihapus.',
+    'wo_created' => 'Work Order #:wo_number berhasil dibuat.',
+    'wo_approved' => 'Work Order #:wo_number telah disetujui.',
+];
+
+validation.php:
+return [
+    'required' => 'Field :attribute harus diisi.',
+    'email' => 'Format email :attribute tidak valid.',
+    'unique' => ':attribute sudah terdaftar di sistem.',
+    'min' => ':attribute minimal :min karakter.',
+    'password_weak' => 'Password harus kombinasi huruf besar, huruf kecil, angka, dan simbol.',
+];
+
+Date & Time Formatting:
+{{ $date->format('d-m-Y') }}              // 28-08-2026
+{{ $date->translatedFormat('d MMMM Y') }}  // 28 Agustus 2026
+{{ formatRupiah($price) }}                 // Rp 10.000.000
+
+========================================
+8. ACTIVITY LOGGING & AUDIT TRAIL
+========================================
+
+ActivityLog Model:
+class ActivityLog extends Model {
+    use HasUuids;
+    
+    protected $fillable = [
+        'user_id', 'action', 'module', 'model_id', 'model_type',
+        'old_values', 'new_values', 'ip_address', 'user_agent'
+    ];
+    
+    protected $casts = [
+        'old_values' => 'json',
+        'new_values' => 'json',
+    ];
+    
+    public static function log(string $action, string $module, Model $model, ?array $oldValues = null) {
+        self::create([
+            'user_id' => Auth::id(),
+            'action' => $action,
+            'module' => $module,
+            'model_id' => $model->id,
+            'model_type' => $model::class,
+            'old_values' => $oldValues,
+            'new_values' => $model->toArray(),
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+    }
+}
+
+Auto-Logging via Observer:
+class ActivityObserver {
+    public function created($model) {
+        ActivityLog::log('create', class_basename($model), $model);
+    }
+    
+    public function updated($model) {
+        ActivityLog::log('update', class_basename($model), $model, $model->getOriginal());
+    }
+    
+    public function deleted($model) {
+        ActivityLog::log('delete', class_basename($model), $model, $model->toArray());
+    }
+}
+
+Register Observer:
+Equipment::observe(ActivityObserver::class);
+WorkOrder::observe(ActivityObserver::class);
+
+========================================
+9. SECURITY HEADERS & MIDDLEWARE
+========================================
+
+Custom Security Headers Middleware:
+
+class SecurityHeaders {
+    public function handle(Request $request, Closure $next) {
+        $response = $next($request);
+        
+        $response->headers->set('X-Frame-Options', 'DENY');
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
+        $response->headers->set('X-XSS-Protection', '1; mode=block');
+        $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        
+        $response->headers->set('Content-Security-Policy', 
+            "default-src 'self'; "
+            . "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            . "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            . "img-src 'self' data: https:; "
+            . "connect-src 'self';"
+        );
+        
+        if (app()->environment('production')) {
+            $response->headers->set('Strict-Transport-Security', 
+                'max-age=31536000; includeSubDomains; preload'
+            );
+        }
+        
+        return $response;
+    }
+}
+
+CORS Configuration (config/cors.php):
+return [
+    'paths' => ['api/*'],
+    'allowed_origins' => [
+        'https://yourdomain.com',
+        'https://app.yourdomain.com',
+    ],
+    'allowed_methods' => ['*'],
+    'allowed_headers' => ['*'],
+    'max_age' => 0,
+    'supports_credentials' => true,
+];
+
+========================================
+10. TESTING STANDARDS
+========================================
+
+Test Structure:
+tests/
+├── Feature/
+│   ├── Auth/
+│   ├── Modules/ (EquipmentTest, WorkOrderTest, etc)
+│   ├── Api/
+│   └── Authorization/
+└── Unit/
+
+Example Feature Test:
+
+class EquipmentTest extends TestCase {
+    private User $admin;
+    private User $technician;
+    
+    protected function setUp(): void {
+        parent::setUp();
+        $this->admin = User::factory()->withRole('admin')->create();
+        $this->technician = User::factory()->withRole('technician')->create();
+    }
+    
+    // ✅ CREATE Tests
+    public function test_admin_can_create_equipment() {
+        $this->actingAs($this->admin)
+            ->post('/equipments', [
+                'equipment_code' => 'EQ-001',
+                'equipment_name' => 'Excavator',
+                'status' => 'active',
+            ])
+            ->assertRedirect('/equipments')
+            ->assertSessionHas('success');
+        
+        $this->assertDatabaseHas('equipments', ['equipment_code' => 'EQ-001']);
+    }
+    
+    public function test_technician_cannot_create_equipment() {
+        $this->actingAs($this->technician)
+            ->post('/equipments', ['equipment_code' => 'EQ-002'])
+            ->assertForbidden();
+    }
+    
+    // ✅ READ Tests
+    public function test_user_can_view_equipment_list() {
+        Equipment::factory(5)->create();
+        
+        $this->actingAs($this->technician)
+            ->get('/equipments')
+            ->assertSuccessful();
+    }
+    
+    // ✅ UPDATE Tests
+    public function test_admin_can_update_equipment() {
+        $equipment = Equipment::factory()->create();
+        
+        $this->actingAs($this->admin)
+            ->put("/equipments/{$equipment->id}", ['equipment_name' => 'Updated'])
+            ->assertRedirect();
+        
+        $this->assertDatabaseHas('equipments', ['id' => $equipment->id, 'equipment_name' => 'Updated']);
+    }
+    
+    // ✅ DELETE Tests
+    public function test_admin_can_delete_equipment() {
+        $equipment = Equipment::factory()->create();
+        
+        $this->actingAs($this->admin)
+            ->delete("/equipments/{$equipment->id}")
+            ->assertSuccessful();
+        
+        $this->assertSoftDeleted($equipment);
+    }
+    
+    // ✅ VALIDATION Tests
+    public function test_equipment_code_must_be_unique() {
+        Equipment::factory()->create(['equipment_code' => 'EQ-DUP']);
+        
+        $this->actingAs($this->admin)
+            ->post('/equipments', ['equipment_code' => 'EQ-DUP', 'equipment_name' => 'Test'])
+            ->assertSessionHasErrors('equipment_code');
+    }
+}
+
+Run Tests:
+php artisan test
+
+========================================
+11. COMMON PITFALLS TO AVOID
+========================================
+
+❌ SQL Injection:
+DB::select("WHERE id = '" . $id . "'")
+
+✅ Use Query Builder:
+Model::where('id', $id)
+
+---
+
+❌ Mass Assignment Vulnerability:
+Equipment::create($request->all())
+protected $guarded = [];
+
+✅ Explicit Fillable:
+protected $fillable = ['code', 'name', 'status'];
+
+---
+
+❌ N+1 Queries:
+foreach ($equipments as $eq) {
+    echo $eq->createdBy->name;
+}
+
+✅ Eager Load:
+Equipment::with('createdBy')->get();
+
+---
+
+❌ Hardcoded Role Checks:
+if ($user->role === 'admin') { ... }
+
+✅ Use Permissions:
+$user->can('delete equipment')
+
+---
+
+❌ No Transactions:
+$model->save();
+relatedModel->save();
+// Error on second line leaves inconsistent data
+
+✅ Wrap in Transaction:
+DB::transaction(function () {
+    $model->save();
+    $relatedModel->save();
+});
+
+---
+
+❌ No Logging:
+$equipment->delete();
+// Later: who deleted it? when?
+
+✅ Activity Logging:
+ActivityLog::log('delete', 'equipment', $equipment);
+
+---
+
+❌ Exposing UUIDs in URLs (Bad):
+GET /equipments/550e8400-e29b-41d4-a716-446655440000
+
+✅ Route Model Binding (Good):
+GET /equipments/{equipment}
+// Laravel resolves via UUID automatically
+
+---
+
+❌ No Validation:
+$user->update($request->all());
+
+✅ Validate First:
+$this->validate($request, ['email' => 'required|email|unique:users']);
+$user->update($request->validated());
+
+========================================
+12. DEPLOYMENT CHECKLIST
+========================================
+
+Before going to production:
+
+[ ] .env configured (APP_DEBUG=false, HTTPS enabled)
+[ ] Database encryption enabled
+[ ] Queue worker running
+[ ] Scheduled tasks configured
+[ ] Backup strategy in place (daily dumps)
+[ ] Monitoring enabled (Sentry, logs)
+[ ] Rate limiting configured
+[ ] CORS properly restricted
+[ ] Static assets cached
+[ ] All tests passing
+[ ] Security headers configured
+[ ] SQL indexes optimized
+[ ] Audit logs retention policy set
+[ ] SSL certificate installed
+[ ] SESSION_SECURE_COOKIES=true
+
+========================================
+13. QUICK REFERENCE - WHEN YOU NEED HELP
+========================================
+
+Need to...                         See Section...
+Create new module                  5. NEW MODULE CREATION CHECKLIST
+Write API endpoint                 6.1 REST API PATTERN
+Send WhatsApp notification         6.2 WHATSAPP NOTIFICATIONS
+Fix security issue                 1. CORE SECURITY & 9. SECURITY HEADERS
+Set up permissions                 4. DYNAMIC RBAC
+Write test                         10. TESTING STANDARDS
+Log activity                       8. ACTIVITY LOGGING
+Handle localization                7. LOCALIZATION
+Build UI                           2. FRONTEND & METRONIC
+
+========================================
+END OF MASTER PROMPT
+========================================
+
+VERSI TERBARU: August 28, 2026
+Target Stack: Laravel 11, MySQL 8.0+, Metronic 8, Bootstrap 5
+Untuk CMMS PT MAM - Site Harindo Wahana
+
+Gunakan prompt ini di awal setiap module development!
+Paste ke Claude/Gemini sebelum minta buat fitur baru.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-08-28T06:54:35+08:00.
+
+The user's current state is as follows:
+Running terminal commands:
+- php artisan serve (in c:\laragon\www\cmmsaiswhav2, running for 1m0s)
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from None to Gemini 3.1 Pro (High). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE><USER_REQUEST>
+beri rekomendasi, agar aman untuk menjalankan.
+UUID pastikan juga berjalan di semua system
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-08-28T07:03:30+08:00.
+
+The user's current state is as follows:
+Running terminal commands:
+- php artisan serve (in c:\laragon\www\cmmsaiswhav2, running for 9m56s)
+</ADDITIONAL_METADATA><USER_REQUEST>
+ok jalankan semua, tanpa perlu persetujuan dari saya, kamu jalankan dari awal  hingga selesai
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-08-28T07:06:59+08:00.
+
+The user's current state is as follows:
+Running terminal commands:
+- php artisan serve (in c:\laragon\www\cmmsaiswhav2, running for 13m25s)
+</ADDITIONAL_METADATA><USER_REQUEST>
+masih tidak ada apa apa..?
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-08-28T07:55:06+08:00.
+
+The user's current state is as follows:
+Active Document: c:\laragon\www\cmmsaiswhav2\routes\api.php (LANGUAGE_PHP)
+Cursor is on line: 1
+Other open documents:
+- c:\laragon\www\cmmsaiswhav2\routes\api.php (LANGUAGE_PHP)
+Running terminal commands:
+- php artisan serve (in c:\laragon\www\cmmsaiswhav2, running for 1h1m32s)
+</ADDITIONAL_METADATA><USER_REQUEST>
+apakah di awal prompt masih belum jelas?
+2. FRONTEND & UI FRAMEWORK (METRONIC 8)
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-08-28T07:57:30+08:00.
+
+The user's current state is as follows:
+Active Document: c:\laragon\www\cmmsaiswhav2\routes\api.php (LANGUAGE_PHP)
+Cursor is on line: 1
+Other open documents:
+- c:\laragon\www\cmmsaiswhav2\routes\api.php (LANGUAGE_PHP)
+Running terminal commands:
+- php artisan serve (in c:\laragon\www\cmmsaiswhav2, running for 1h3m56s)
+</ADDITIONAL_METADATA>Created At: 2026-08-28T07:58:21+08:00
+Completed At: 2026-08-28T07:58:28+08:00
+
+				The command exited with code 1.
+				Output:
+				Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import json; f=open(r'C:\Users\lenov\.gemini\antigravity-ide\brain\955b3f60-a859-48a0-9f20-51e55f0a848f\.system_generated\logs\transcript_full.jsonl'); [print(json.loads(line)['content']) for line in f if 'USER_INPUT' in line][:1]
+                                                                                                                                                                                                            ^
+  File "C:\laragon\bin\python\python-3.13\Lib\encodings\cp1252.py", line 23, in decode
+    return codecs.charmap_decode(input,self.errors,decoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeDecodeError: 'charmap' codec can't decode byte 0x9d in position 2629: character maps to <undefined>
+
+Created At: 2026-08-28T07:58:34+08:00
+Completed At: 2026-08-28T07:58:37+08:00
+
+				The command exited with code 1.
+				Output:
+				Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import json; f=open(r'C:\Users\lenov\.gemini\antigravity-ide\brain\955b3f60-a859-48a0-9f20-51e55f0a848f\.system_generated\logs\transcript_full.jsonl', encoding='utf-8'); content=[json.loads(line)['content'] for line in f if 'USER_INPUT' in line][0]; print(content[content.find('2. FRONTEND & UI FRAMEWORK (METRONIC 8)'):content.find('3. ')])
+                                                                                                                                                                                       ~~~~~~~~~~~~~~~~^^^^^^^^^^^
+KeyError: 'content'
+

@@ -1,0 +1,42 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('messages', function (Blueprint $table) {
+            $table->foreignUuid('chat_group_id')->nullable()->after('id')->constrained('chat_groups')->cascadeOnDelete();
+            $table->foreignUuid('receiver_id')->nullable()->change();
+
+            // Attachment fields
+            $table->string('attachment_path')->nullable()->after('message');
+            $table->string('attachment_type')->nullable()->after('attachment_path'); // 'image', 'video', 'document', 'audio'
+            $table->string('attachment_name')->nullable()->after('attachment_type');
+            $table->unsignedBigInteger('attachment_size')->nullable()->after('attachment_name');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('messages', function (Blueprint $table) {
+            $table->dropForeign(['chat_group_id']);
+            $table->dropColumn([
+                'chat_group_id',
+                'attachment_path',
+                'attachment_type',
+                'attachment_name',
+                'attachment_size',
+            ]);
+        });
+    }
+};

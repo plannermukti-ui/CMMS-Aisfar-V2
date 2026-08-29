@@ -1,0 +1,138 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\ReffEquip;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class ReffEquipSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $data = [
+            ['make' => 'Caterpillar', 'tipe' => 'Excavator', 'class' => 'Large', 'model' => '390F'],
+            ['make' => 'Caterpillar', 'tipe' => 'Excavator', 'class' => 'Large', 'model' => '375L'],
+            ['make' => 'Caterpillar', 'tipe' => 'Excavator', 'class' => 'Medium', 'model' => '374F'],
+            ['make' => 'Caterpillar', 'tipe' => 'Excavator', 'class' => 'Medium', 'model' => '349F'],
+            ['make' => 'Caterpillar', 'tipe' => 'Excavator', 'class' => 'Medium', 'model' => '336'],
+            ['make' => 'Caterpillar', 'tipe' => 'Excavator', 'class' => 'Small', 'model' => '320'],
+            ['make' => 'Caterpillar', 'tipe' => 'Excavator', 'class' => 'Small', 'model' => '312'],
+            ['make' => 'Komatsu', 'tipe' => 'Excavator', 'class' => 'Large', 'model' => 'PC8000-6'],
+            ['make' => 'Komatsu', 'tipe' => 'Excavator', 'class' => 'Large', 'model' => 'PC5500-6'],
+            ['make' => 'Komatsu', 'tipe' => 'Excavator', 'class' => 'Medium', 'model' => 'PC800SE-8'],
+            ['make' => 'Komatsu', 'tipe' => 'Excavator', 'class' => 'Medium', 'model' => 'PC500-10'],
+            ['make' => 'Komatsu', 'tipe' => 'Excavator', 'class' => 'Small', 'model' => 'PC300-8'],
+            ['make' => 'Komatsu', 'tipe' => 'Excavator', 'class' => 'Small', 'model' => 'PC200-8'],
+            ['make' => 'Hitachi', 'tipe' => 'Excavator', 'class' => 'Large', 'model' => 'EX5500-6'],
+            ['make' => 'Hitachi', 'tipe' => 'Excavator', 'class' => 'Large', 'model' => 'EX3600-6'],
+            ['make' => 'Hitachi', 'tipe' => 'Excavator', 'class' => 'Medium', 'model' => 'EX800-6'],
+            ['make' => 'Hitachi', 'tipe' => 'Excavator', 'class' => 'Medium', 'model' => 'EX600-6'],
+            ['make' => 'Hitachi', 'tipe' => 'Excavator', 'class' => 'Small', 'model' => 'EX300-6'],
+            ['make' => 'Volvo', 'tipe' => 'Excavator', 'class' => 'Medium', 'model' => 'EC480E'],
+            ['make' => 'Volvo', 'tipe' => 'Excavator', 'class' => 'Small', 'model' => 'EC380E'],
+            ['make' => 'Sany', 'tipe' => 'Excavator', 'class' => 'Large', 'model' => 'SY850H'],
+            ['make' => 'Sany', 'tipe' => 'Excavator', 'class' => 'Medium', 'model' => 'SY500H'],
+            ['make' => 'Sany', 'tipe' => 'Excavator', 'class' => 'Small', 'model' => 'SY365H'],
+            ['make' => 'Caterpillar', 'tipe' => 'Dozer', 'class' => 'Large', 'model' => 'D10T2'],
+            ['make' => 'Caterpillar', 'tipe' => 'Dozer', 'class' => 'Large', 'model' => 'D9R'],
+            ['make' => 'Caterpillar', 'tipe' => 'Dozer', 'class' => 'Medium', 'model' => 'D8T'],
+            ['make' => 'Caterpillar', 'tipe' => 'Dozer', 'class' => 'Medium', 'model' => 'D6R'],
+            ['make' => 'Caterpillar', 'tipe' => 'Dozer', 'class' => 'Small', 'model' => 'D7R'],
+            ['make' => 'Caterpillar', 'tipe' => 'Dozer', 'class' => 'Small', 'model' => 'D6T'],
+            ['make' => 'Komatsu', 'tipe' => 'Dozer', 'class' => 'Large', 'model' => 'D575AX-8'],
+            ['make' => 'Komatsu', 'tipe' => 'Dozer', 'class' => 'Large', 'model' => 'D475A-8'],
+            ['make' => 'Komatsu', 'tipe' => 'Dozer', 'class' => 'Large', 'model' => 'D375A-8'],
+            ['make' => 'Komatsu', 'tipe' => 'Dozer', 'class' => 'Medium', 'model' => 'D275AX-5'],
+            ['make' => 'Komatsu', 'tipe' => 'Dozer', 'class' => 'Medium', 'model' => 'D155AX-6'],
+            ['make' => 'Komatsu', 'tipe' => 'Dozer', 'class' => 'Small', 'model' => 'D61EX-12'],
+            ['make' => 'Volvo', 'tipe' => 'Dozer', 'class' => 'Large', 'model' => 'DD138'],
+            ['make' => 'Volvo', 'tipe' => 'Dozer', 'class' => 'Medium', 'model' => 'DD116'],
+            ['make' => 'Shantui', 'tipe' => 'Dozer', 'class' => 'Large', 'model' => 'SD90'],
+            ['make' => 'Shantui', 'tipe' => 'Dozer', 'class' => 'Medium', 'model' => 'SD70'],
+            ['make' => 'Sany', 'tipe' => 'Dozer', 'class' => 'Large', 'model' => 'SD75'],
+            ['make' => 'Sany', 'tipe' => 'Dozer', 'class' => 'Medium', 'model' => 'SD62'],
+            ['make' => 'Caterpillar', 'tipe' => 'Wheel Loader', 'class' => 'Large', 'model' => '990M'],
+            ['make' => 'Caterpillar', 'tipe' => 'Wheel Loader', 'class' => 'Large', 'model' => '980M'],
+            ['make' => 'Caterpillar', 'tipe' => 'Wheel Loader', 'class' => 'Medium', 'model' => '938H'],
+            ['make' => 'Caterpillar', 'tipe' => 'Wheel Loader', 'class' => 'Medium', 'model' => '928M'],
+            ['make' => 'Caterpillar', 'tipe' => 'Wheel Loader', 'class' => 'Small', 'model' => '908H'],
+            ['make' => 'Komatsu', 'tipe' => 'Wheel Loader', 'class' => 'Large', 'model' => 'WA900-3C'],
+            ['make' => 'Komatsu', 'tipe' => 'Wheel Loader', 'class' => 'Large', 'model' => 'WA800-3'],
+            ['make' => 'Komatsu', 'tipe' => 'Wheel Loader', 'class' => 'Medium', 'model' => 'WA600-8'],
+            ['make' => 'Komatsu', 'tipe' => 'Wheel Loader', 'class' => 'Medium', 'model' => 'WA470-8'],
+            ['make' => 'Komatsu', 'tipe' => 'Wheel Loader', 'class' => 'Small', 'model' => 'WA320-8'],
+            ['make' => 'Volvo', 'tipe' => 'Wheel Loader', 'class' => 'Large', 'model' => 'L350H'],
+            ['make' => 'Volvo', 'tipe' => 'Wheel Loader', 'class' => 'Large', 'model' => 'L250H'],
+            ['make' => 'Volvo', 'tipe' => 'Wheel Loader', 'class' => 'Medium', 'model' => 'L220H'],
+            ['make' => 'JCB', 'tipe' => 'Wheel Loader', 'class' => 'Medium', 'model' => '3CX Backhoe'],
+            ['make' => 'XCMG', 'tipe' => 'Wheel Loader', 'class' => 'Large', 'model' => 'LW900KN'],
+            ['make' => 'XCMG', 'tipe' => 'Wheel Loader', 'class' => 'Medium', 'model' => 'LW500KN'],
+            ['make' => 'Sany', 'tipe' => 'Wheel Loader', 'class' => 'Large', 'model' => 'SY956H'],
+            ['make' => 'Sany', 'tipe' => 'Wheel Loader', 'class' => 'Medium', 'model' => 'SY556H'],
+            ['make' => 'Caterpillar', 'tipe' => 'Articulated Dump Truck', 'class' => 'Medium', 'model' => '740G'],
+            ['make' => 'Caterpillar', 'tipe' => 'Articulated Dump Truck', 'class' => 'Medium', 'model' => '745C'],
+            ['make' => 'Caterpillar', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => '773G'],
+            ['make' => 'Caterpillar', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => '773F'],
+            ['make' => 'Caterpillar', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => '775G'],
+            ['make' => 'Caterpillar', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => '777F'],
+            ['make' => 'Komatsu', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => 'HM400-5'],
+            ['make' => 'Komatsu', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => 'HM300-5'],
+            ['make' => 'Volvo', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => 'A60H'],
+            ['make' => 'Volvo', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => 'A45G'],
+            ['make' => 'Hitachi', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => 'EH3500ACII'],
+            ['make' => 'Sany', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => 'SAC1300HD'],
+            ['make' => 'Sany', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => 'SAC1000HD'],
+            ['make' => 'Tonly', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => 'TLD380'],
+            ['make' => 'Tonly', 'tipe' => 'Articulated Dump Truck', 'class' => 'Large', 'model' => 'TLD360'],
+            ['make' => 'Caterpillar', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => '797F'],
+            ['make' => 'Caterpillar', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => '794AC'],
+            ['make' => 'Caterpillar', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => '789D'],
+            ['make' => 'Komatsu', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => '980E-5'],
+            ['make' => 'Komatsu', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => '930E-5'],
+            ['make' => 'Komatsu', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Medium', 'model' => 'HD785-8'],
+            ['make' => 'Volvo', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => 'A60H'],
+            ['make' => 'Hitachi', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => 'EH5000ACII'],
+            ['make' => 'Hitachi', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => 'EH3500ACII'],
+            ['make' => 'Sany', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => 'SAT4800'],
+            ['make' => 'Sany', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => 'SAT3800'],
+            ['make' => 'Tonly', 'tipe' => 'Off-Highway Dump Truck', 'class' => 'Large', 'model' => 'TLW370'],
+            ['make' => 'Hino', 'tipe' => 'Highway Dump Truck', 'class' => 'Medium', 'model' => 'Mega Truck 10x4'],
+            ['make' => 'Isuzu', 'tipe' => 'Highway Dump Truck', 'class' => 'Medium', 'model' => 'GXZ 6x4'],
+            ['make' => 'Mitsubishi', 'tipe' => 'Highway Dump Truck', 'class' => 'Medium', 'model' => 'Fuso 6x4'],
+            ['make' => 'Iveco', 'tipe' => 'Highway Dump Truck', 'class' => 'Medium', 'model' => 'Stralis 6x4'],
+            ['make' => 'Shacman', 'tipe' => 'Highway Dump Truck', 'class' => 'Large', 'model' => 'SX3315 8x4'],
+            ['make' => 'Caterpillar', 'tipe' => 'Motor Grader', 'class' => 'Large', 'model' => '24M'],
+            ['make' => 'Caterpillar', 'tipe' => 'Motor Grader', 'class' => 'Medium', 'model' => '16M'],
+            ['make' => 'Caterpillar', 'tipe' => 'Motor Grader', 'class' => 'Small', 'model' => '12M'],
+            ['make' => 'Komatsu', 'tipe' => 'Motor Grader', 'class' => 'Large', 'model' => 'GD670-5'],
+            ['make' => 'Komatsu', 'tipe' => 'Motor Grader', 'class' => 'Medium', 'model' => 'GD555-5'],
+            ['make' => 'Volvo', 'tipe' => 'Motor Grader', 'class' => 'Large', 'model' => 'G970'],
+            ['make' => 'Volvo', 'tipe' => 'Motor Grader', 'class' => 'Medium', 'model' => 'G940'],
+            ['make' => 'Shantui', 'tipe' => 'Motor Grader', 'class' => 'Medium', 'model' => 'SG21-3'],
+            ['make' => 'Sany', 'tipe' => 'Motor Grader', 'class' => 'Large', 'model' => 'SG340-2'],
+            ['make' => 'Caterpillar', 'tipe' => 'Vibratory Roller', 'class' => 'Large', 'model' => 'CP85'],
+            ['make' => 'Caterpillar', 'tipe' => 'Vibratory Roller', 'class' => 'Medium', 'model' => 'CP74B'],
+            ['make' => 'Caterpillar', 'tipe' => 'Vibratory Roller', 'class' => 'Small', 'model' => 'CP44B'],
+            ['make' => 'Volvo', 'tipe' => 'Vibratory Roller', 'class' => 'Large', 'model' => 'DD138HF'],
+            ['make' => 'Volvo', 'tipe' => 'Vibratory Roller', 'class' => 'Medium', 'model' => 'DD120HF'],
+            ['make' => 'Shantui', 'tipe' => 'Vibratory Roller', 'class' => 'Large', 'model' => 'SR22M'],
+            ['make' => 'XCMG', 'tipe' => 'Vibratory Roller', 'class' => 'Medium', 'model' => 'XS162J'],
+        ];
+
+        DB::statement('DELETE FROM reff_equips');
+
+        foreach ($data as $index => $item) {
+            ReffEquip::create([
+                'no' => $index + 1,
+                'make' => $item['make'],
+                'tipe' => $item['tipe'],
+                'class' => $item['class'],
+                'model' => $item['model'],
+            ]);
+        }
+    }
+}
