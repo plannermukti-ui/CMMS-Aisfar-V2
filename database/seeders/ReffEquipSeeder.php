@@ -117,10 +117,29 @@ class ReffEquipSeeder extends Seeder
             ['make' => 'Caterpillar', 'tipe' => 'Vibratory Roller', 'class' => 'Large', 'model' => 'CP85'],
             ['make' => 'Caterpillar', 'tipe' => 'Vibratory Roller', 'class' => 'Medium', 'model' => 'CP74B'],
             ['make' => 'Caterpillar', 'tipe' => 'Vibratory Roller', 'class' => 'Small', 'model' => 'CP44B'],
-            ['make' => 'Volvo', 'tipe' => 'Vibratory Roller', 'class' => 'Large', 'model' => 'DD138HF'],
-            ['make' => 'Volvo', 'tipe' => 'Vibratory Roller', 'class' => 'Medium', 'model' => 'DD120HF'],
             ['make' => 'Shantui', 'tipe' => 'Vibratory Roller', 'class' => 'Large', 'model' => 'SR22M'],
             ['make' => 'XCMG', 'tipe' => 'Vibratory Roller', 'class' => 'Medium', 'model' => 'XS162J'],
+            // Light Vehicles (LV)
+            ['make' => 'Toyota', 'tipe' => 'Light Vehicle', 'class' => '4x4 D-Cab', 'model' => 'Hilux 2.4 G 4x4'],
+            ['make' => 'Toyota', 'tipe' => 'Light Vehicle', 'class' => '4x4 D-Cab', 'model' => 'Hilux 2.8 V 4x4'],
+            ['make' => 'Toyota', 'tipe' => 'Light Vehicle', 'class' => '4x4 SUV', 'model' => 'Land Cruiser 79 Troop Carrier'],
+            ['make' => 'Mitsubishi', 'tipe' => 'Light Vehicle', 'class' => '4x4 D-Cab', 'model' => 'Triton 2.4 HDX 4x4'],
+            ['make' => 'Mitsubishi', 'tipe' => 'Light Vehicle', 'class' => '4x4 D-Cab', 'model' => 'Triton 2.4 Ultimate 4x4'],
+            ['make' => 'Isuzu', 'tipe' => 'Light Vehicle', 'class' => '4x4 S-Cab', 'model' => 'D-Max 3.0 Single Cabin 4x4'],
+            ['make' => 'Isuzu', 'tipe' => 'Light Vehicle', 'class' => '4x4 D-Cab', 'model' => 'D-Max 1.9 Rodeo 4x4'],
+            ['make' => 'Ford', 'tipe' => 'Light Vehicle', 'class' => '4x4 D-Cab', 'model' => 'Ranger 2.0 Bi-Turbo 4x4'],
+            // Support Trucks
+            ['make' => 'Mitsubishi', 'tipe' => 'Water Truck', 'class' => 'Medium 6x4', 'model' => 'Fuso Fighter FM65FS Water 20kL'],
+            ['make' => 'Hino', 'tipe' => 'Water Truck', 'class' => 'Medium 6x4', 'model' => 'Hino 500 FM260JD Water 20kL'],
+            ['make' => 'Hino', 'tipe' => 'Fuel Truck', 'class' => 'Medium 6x4', 'model' => 'Hino 500 FM260TI Fuel 15kL'],
+            ['make' => 'Scania', 'tipe' => 'Fuel Truck', 'class' => 'Heavy 8x4', 'model' => 'Scania P360 Fuel 25kL'],
+            ['make' => 'Hino', 'tipe' => 'Lube Service Truck', 'class' => 'Medium 6x4', 'model' => 'Hino 500 FL260 Lube Truck'],
+            // Cranes & Ancillary
+            ['make' => 'Tadano', 'tipe' => 'Mobile Crane', 'class' => 'Rough Terrain', 'model' => 'GR-500EX 50T'],
+            ['make' => 'Kato', 'tipe' => 'Mobile Crane', 'class' => 'Rough Terrain', 'model' => 'CR-350Ri 35T'],
+            ['make' => 'Atlas Copco', 'tipe' => 'Tower Lamp', 'class' => 'Mobile Lighting', 'model' => 'HiLight V4+ LED'],
+            ['make' => 'Caterpillar', 'tipe' => 'Generator Set', 'class' => '500 kVA', 'model' => 'CAT DE500 GC'],
+            ['make' => 'Cummins', 'tipe' => 'Generator Set', 'class' => '750 kVA', 'model' => 'Cummins C750 D5'],
         ];
 
         DB::statement('DELETE FROM reff_equips');
