@@ -153,12 +153,28 @@
             width: 76px;
             height: 68px;
             border-radius: 12px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             text-decoration: none;
             transition: all 0.2s ease-in-out;
             position: relative;
         }
+
+        .slim-sidebar .menu-section-label {
+            font-size: 0.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            text-align: center;
+            width: 100%;
+        }
+        .theme-scm .slim-sidebar .menu-section-label { color: rgba(255,255,255,0.4); }
+        .theme-plant .slim-sidebar .menu-section-label { color: rgba(0,0,0,0.3); }
         
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
         .slim-sidebar .menu-item i {
             font-size: 24px !important;
             line-height: 1;
@@ -337,99 +353,110 @@
                 </div>
                 
                 <!-- Menu Items -->
-                @if($isScm)
-                    <!-- SCM Navigation -->
-                    <a href="{{ route('scm.dashboard') }}" class="menu-item {{ request()->routeIs('scm.dashboard') ? 'active' : '' }}" title="SCM Dashboard">
-                        <i class="ki-outline ki-chart-simple-3"></i>
-                        <span>Dashboard</span>
-                    </a>
+                <div class="w-100 flex-grow-1 overflow-y-auto overflow-x-hidden scrollbar-hide px-2">
+                    @if($isScm)
+                        <!-- SCM Navigation -->
+                        <div class="menu-section-label">Main</div>
+                        <a href="{{ route('scm.dashboard') }}" class="menu-item {{ request()->routeIs('scm.dashboard') ? 'active' : '' }}" title="SCM Dashboard">
+                            <i class="ki-outline ki-chart-simple-3"></i>
+                            <span>Dashboard</span>
+                        </a>
 
-                    <a href="{{ route('scm.parts') }}" class="menu-item {{ request()->routeIs('scm.parts') ? 'active' : '' }}" title="Master Spareparts Catalog">
-                        <i class="ki-outline ki-cube-2"></i>
-                        <span>Spareparts</span>
-                    </a>
+                        <div class="menu-section-label">Inventory</div>
+                        <a href="{{ route('scm.parts') }}" class="menu-item {{ request()->routeIs('scm.parts') ? 'active' : '' }}" title="Master Spareparts Catalog">
+                            <i class="ki-outline ki-cube-2"></i>
+                            <span>Spareparts</span>
+                        </a>
 
-                    <a href="{{ route('scm.opname') }}" class="menu-item {{ request()->routeIs('scm.opname') ? 'active' : '' }}" title="Stock Opname & Berita Acara">
-                        <i class="ki-outline ki-clipboard"></i>
-                        <span>Opname</span>
-                    </a>
-                    
-                    <a href="{{ route('scm.mol') }}" class="menu-item {{ request()->routeIs('scm.mol') ? 'active' : '' }}" title="MOL (Mechanic Order Part)">
-                        <i class="ki-outline ki-handcart"></i>
-                        <span>MOL</span>
-                    </a>
+                        <a href="{{ route('scm.opname') }}" class="menu-item {{ request()->routeIs('scm.opname') ? 'active' : '' }}" title="Stock Opname & Berita Acara">
+                            <i class="ki-outline ki-clipboard"></i>
+                            <span>Opname</span>
+                        </a>
+                        
+                        <div class="menu-section-label">Purchasing</div>
+                        <a href="{{ route('scm.mol') }}" class="menu-item {{ request()->routeIs('scm.mol') ? 'active' : '' }}" title="MOL (Mechanic Order Part)">
+                            <i class="ki-outline ki-handcart"></i>
+                            <span>MOL</span>
+                        </a>
 
-                    <a href="{{ route('scm.pr') }}" class="menu-item {{ request()->routeIs('scm.pr') ? 'active' : '' }}" title="PR (Purchase Request)">
-                        <i class="ki-outline ki-document"></i>
-                        <span>PR</span>
-                    </a>
+                        <a href="{{ route('scm.pr') }}" class="menu-item {{ request()->routeIs('scm.pr') ? 'active' : '' }}" title="PR (Purchase Request)">
+                            <i class="ki-outline ki-document"></i>
+                            <span>PR</span>
+                        </a>
 
-                    <a href="{{ route('scm.rfq') }}" class="menu-item {{ request()->routeIs('scm.rfq') ? 'active' : '' }}" title="RFQ & Evaluasi Vendor">
-                        <i class="ki-outline ki-calculator"></i>
-                        <span>RFQ</span>
-                    </a>
+                        <a href="{{ route('scm.rfq') }}" class="menu-item {{ request()->routeIs('scm.rfq') ? 'active' : '' }}" title="RFQ & Evaluasi Vendor">
+                            <i class="ki-outline ki-calculator"></i>
+                            <span>RFQ</span>
+                        </a>
 
-                    <a href="{{ route('scm.po') }}" class="menu-item {{ request()->routeIs('scm.po') ? 'active' : '' }}" title="PO (Purchase Order)">
-                        <i class="ki-outline ki-notepad-edit"></i>
-                        <span>PO</span>
-                    </a>
+                        <a href="{{ route('scm.po') }}" class="menu-item {{ request()->routeIs('scm.po') ? 'active' : '' }}" title="PO (Purchase Order)">
+                            <i class="ki-outline ki-notepad-edit"></i>
+                            <span>PO</span>
+                        </a>
 
-                    <a href="{{ route('scm.do') }}" class="menu-item {{ request()->routeIs('scm.do') ? 'active' : '' }}" title="DO (Delivery Order to Site)">
-                        <i class="ki-outline ki-delivery-3"></i>
-                        <span>DO Delivery</span>
-                    </a>
+                        <div class="menu-section-label">Logistics</div>
+                        <a href="{{ route('scm.do') }}" class="menu-item {{ request()->routeIs('scm.do') ? 'active' : '' }}" title="DO (Delivery Order to Site)">
+                            <i class="ki-outline ki-delivery-3"></i>
+                            <span>Delivery</span>
+                        </a>
 
-                    <a href="{{ route('scm.gr') }}" class="menu-item {{ request()->routeIs('scm.gr') ? 'active' : '' }}" title="GR (Goods Receipt Gudang)">
-                        <i class="ki-outline ki-package"></i>
-                        <span>GR Receipt</span>
-                    </a>
+                        <a href="{{ route('scm.gr') }}" class="menu-item {{ request()->routeIs('scm.gr') ? 'active' : '' }}" title="GR (Goods Receipt Gudang)">
+                            <i class="ki-outline ki-package"></i>
+                            <span>Receipt</span>
+                        </a>
 
-                    <a href="{{ route('chat') }}" class="menu-item {{ request()->routeIs('chat') ? 'active' : '' }}" title="Team Chat Messenger">
-                        <i class="ki-outline ki-messages"></i>
-                        <span>Chat</span>
-                    </a>
-                @else
-                    <!-- PLANT Navigation -->
-                    <a href="{{ route('plt.dashboard') }}" class="menu-item {{ request()->routeIs('plt.dashboard') ? 'active' : '' }}" title="PLANT Dashboard">
-                        <i class="ki-outline ki-chart-simple-3"></i>
-                        <span>Dashboard</span>
-                    </a>
+                        <div class="menu-section-label">Team</div>
+                        <a href="{{ route('chat') }}" class="menu-item {{ request()->routeIs('chat') ? 'active' : '' }}" title="Team Chat Messenger">
+                            <i class="ki-outline ki-messages"></i>
+                            <span>Chat</span>
+                        </a>
+                    @else
+                        <!-- PLANT Navigation -->
+                        <div class="menu-section-label">Main</div>
+                        <a href="{{ route('plt.dashboard') }}" class="menu-item {{ request()->routeIs('plt.dashboard') ? 'active' : '' }}" title="PLANT Dashboard">
+                            <i class="ki-outline ki-chart-simple-3"></i>
+                            <span>Dashboard</span>
+                        </a>
 
-                    <a href="{{ route('plt.workorder') }}" class="menu-item {{ request()->routeIs('plt.workorder') ? 'active' : '' }}" title="Work Order Operasional">
-                        <i class="ki-outline ki-wrench"></i>
-                        <span>Work Order</span>
-                    </a>
+                        <div class="menu-section-label">Maintenance</div>
+                        <a href="{{ route('plt.workorder') }}" class="menu-item {{ request()->routeIs('plt.workorder') ? 'active' : '' }}" title="Work Order Operasional">
+                            <i class="ki-outline ki-wrench"></i>
+                            <span>Work Order</span>
+                        </a>
 
-                    <a href="{{ route('plt.components') }}" class="menu-item {{ request()->routeIs('plt.components') ? 'active' : '' }}" title="Component Tracker & Lifecycle">
-                        <i class="ki-outline ki-cube-2"></i>
-                        <span>Components</span>
-                    </a>
+                        <a href="{{ route('plt.components') }}" class="menu-item {{ request()->routeIs('plt.components') ? 'active' : '' }}" title="Component Tracker & Lifecycle">
+                            <i class="ki-outline ki-cube-2"></i>
+                            <span>Components</span>
+                        </a>
 
-                    <a href="{{ route('plt.ccr') }}" class="menu-item {{ request()->routeIs('plt.ccr') ? 'active' : '' }}" title="Component Condition Report (CCR)">
-                        <i class="ki-outline ki-clipboard"></i>
-                        <span>CCR Report</span>
-                    </a>
+                        <div class="menu-section-label">Reports</div>
+                        <a href="{{ route('plt.ccr') }}" class="menu-item {{ request()->routeIs('plt.ccr') ? 'active' : '' }}" title="Component Condition Report (CCR)">
+                            <i class="ki-outline ki-clipboard"></i>
+                            <span>CCR Report</span>
+                        </a>
 
-                    <a href="{{ route('plt.far') }}" class="menu-item {{ request()->routeIs('plt.far') ? 'active' : '' }}" title="Failure Analysis Report (FAR / Root Cause)">
-                        <i class="ki-outline ki-shield-cross"></i>
-                        <span>FAR Failure</span>
-                    </a>
+                        <a href="{{ route('plt.far') }}" class="menu-item {{ request()->routeIs('plt.far') ? 'active' : '' }}" title="Failure Analysis Report (FAR / Root Cause)">
+                            <i class="ki-outline ki-shield-cross"></i>
+                            <span>FAR Failure</span>
+                        </a>
 
-                    <a href="{{ route('plt.osr') }}" class="menu-item {{ request()->routeIs('plt.osr') ? 'active' : '' }}" title="Outside Repair Order (OSR / Machine Shop)">
-                        <i class="ki-outline ki-delivery-3"></i>
-                        <span>OSR Outside</span>
-                    </a>
+                        <a href="{{ route('plt.osr') }}" class="menu-item {{ request()->routeIs('plt.osr') ? 'active' : '' }}" title="Outside Repair Order (OSR / Machine Shop)">
+                            <i class="ki-outline ki-delivery-3"></i>
+                            <span>OSR</span>
+                        </a>
 
-                    <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" title="Profiles Mekanik">
-                        <i class="ki-outline ki-profile-circle"></i>
-                        <span>Profiles</span>
-                    </a>
+                        <div class="menu-section-label">Team</div>
+                        <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" title="Profiles Mekanik">
+                            <i class="ki-outline ki-profile-circle"></i>
+                            <span>Profiles</span>
+                        </a>
 
-                    <a href="{{ route('chat') }}" class="menu-item {{ request()->routeIs('chat') ? 'active' : '' }}" title="Team Chat Messenger">
-                        <i class="ki-outline ki-messages"></i>
-                        <span>Chat</span>
-                    </a>
-                @endif
+                        <a href="{{ route('chat') }}" class="menu-item {{ request()->routeIs('chat') ? 'active' : '' }}" title="Team Chat Messenger">
+                            <i class="ki-outline ki-messages"></i>
+                            <span>Chat</span>
+                        </a>
+                    @endif
+                </div>
                 
                 <!-- Sidebar Footer (Quick Switcher) -->
                 <div class="sidebar-footer pb-4">
