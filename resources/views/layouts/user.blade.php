@@ -151,24 +151,33 @@
             align-items: center;
             justify-content: center;
             width: 76px;
-            height: 68px;
-            border-radius: 12px;
-            margin-bottom: 4px;
+            height: 56px;
+            border-radius: 10px;
+            margin-bottom: 2px;
             text-decoration: none;
             transition: all 0.2s ease-in-out;
             position: relative;
         }
 
         .slim-sidebar .menu-section-label {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 14px;
-            margin-bottom: 6px;
+            letter-spacing: 0.6px;
+            margin-top: 10px;
+            margin-bottom: 4px;
             text-align: center;
             width: 100%;
         }
+
+        .slim-sidebar .sidebar-divider {
+            width: 36px;
+            height: 1px;
+            margin: 6px auto 2px auto;
+            opacity: 0.2;
+        }
+        .theme-plant .slim-sidebar .sidebar-divider { background: #60a5fa; }
+        .theme-scm .slim-sidebar .sidebar-divider { background: #ffffff; }
         .theme-scm .slim-sidebar .menu-section-label { color: rgba(255,255,255,0.4); }
         .theme-plant .slim-sidebar .menu-section-label { color: rgba(0,0,0,0.3); }
         
@@ -176,9 +185,9 @@
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
         .slim-sidebar .menu-item i {
-            font-size: 24px !important;
+            font-size: 22px !important;
             line-height: 1;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             transition: transform 0.2s ease, color 0.2s ease;
         }
 
@@ -187,7 +196,7 @@
         }
         
         .slim-sidebar .menu-item span {
-            font-size: 10.5px;
+            font-size: 9.5px;
             font-weight: 600;
             letter-spacing: 0.2px;
         }
@@ -412,53 +421,63 @@
                         </a>
                     @else
                         <!-- PLANT Navigation -->
-                        <div class="menu-section-label">Main</div>
-                        <a href="{{ route('plt.dashboard') }}" class="menu-item {{ request()->routeIs('plt.dashboard') ? 'active' : '' }}" title="PLANT Dashboard">
+                        {{-- ═══ OVERVIEW ═══ --}}
+                        <div class="menu-section-label">Overview</div>
+                        <a href="{{ route('plt.dashboard') }}" class="menu-item {{ request()->routeIs('plt.dashboard') ? 'active' : '' }}" title="Dashboard">
                             <i class="ki-outline ki-chart-simple-3"></i>
                             <span>Dashboard</span>
                         </a>
 
-                        <div class="menu-section-label">Maintenance</div>
-                        <a href="{{ route('plt.workorder') }}" class="menu-item {{ request()->routeIs('plt.workorder') ? 'active' : '' }}" title="Work Order Operasional">
+                        <div class="sidebar-divider"></div>
+
+                        {{-- ═══ OPERATIONS ═══ --}}
+                        <div class="menu-section-label">Operations</div>
+                        <a href="{{ route('plt.workorder') }}" class="menu-item {{ request()->routeIs('plt.workorder') ? 'active' : '' }}" title="Work Order">
                             <i class="ki-outline ki-wrench"></i>
                             <span>Work Order</span>
                         </a>
-
-                        <a href="{{ route('plt.components') }}" class="menu-item {{ request()->routeIs('plt.components') ? 'active' : '' }}" title="Component Tracker & Lifecycle">
-                            <i class="ki-outline ki-cube-2"></i>
-                            <span>Components</span>
-                        </a>
-
-                        <a href="{{ route('plt.hm-update') }}" class="menu-item {{ request()->routeIs('plt.hm-update') ? 'active' : '' }}" title="Update HM Equipment">
+                        <a href="{{ route('plt.hm-update') }}" class="menu-item {{ request()->routeIs('plt.hm-update') ? 'active' : '' }}" title="HM Update">
                             <i class="ki-outline ki-watch"></i>
                             <span>HM Update</span>
                         </a>
 
-                        <div class="menu-section-label">Reports</div>
-                        <a href="{{ route('plt.ccr') }}" class="menu-item {{ request()->routeIs('plt.ccr') ? 'active' : '' }}" title="Component Condition Report (CCR)">
+                        <div class="sidebar-divider"></div>
+
+                        {{-- ═══ ASSET TRACKING ═══ --}}
+                        <div class="menu-section-label">Assets</div>
+                        <a href="{{ route('plt.components') }}" class="menu-item {{ request()->routeIs('plt.components') ? 'active' : '' }}" title="Component Tracker">
+                            <i class="ki-outline ki-cube-2"></i>
+                            <span>Components</span>
+                        </a>
+
+                        <div class="sidebar-divider"></div>
+
+                        {{-- ═══ ANALYSIS & REPORTS ═══ --}}
+                        <div class="menu-section-label">Analysis</div>
+                        <a href="{{ route('plt.ccr') }}" class="menu-item {{ request()->routeIs('plt.ccr') ? 'active' : '' }}" title="Condition Report (CCR)">
                             <i class="ki-outline ki-clipboard"></i>
-                            <span>CCR Report</span>
+                            <span>CCR</span>
                         </a>
-
-                        <a href="{{ route('plt.far') }}" class="menu-item {{ request()->routeIs('plt.far') ? 'active' : '' }}" title="Failure Analysis Report (FAR / Root Cause)">
+                        <a href="{{ route('plt.far') }}" class="menu-item {{ request()->routeIs('plt.far') ? 'active' : '' }}" title="Failure Analysis (FAR)">
                             <i class="ki-outline ki-shield-cross"></i>
-                            <span>FAR Failure</span>
+                            <span>FAR</span>
                         </a>
-
-                        <a href="{{ route('plt.osr') }}" class="menu-item {{ request()->routeIs('plt.osr') ? 'active' : '' }}" title="Outside Repair Order (OSR / Machine Shop)">
+                        <a href="{{ route('plt.osr') }}" class="menu-item {{ request()->routeIs('plt.osr') ? 'active' : '' }}" title="Outside Repair (OSR)">
                             <i class="ki-outline ki-delivery-3"></i>
                             <span>OSR</span>
                         </a>
 
-                        <div class="menu-section-label">Team</div>
-                        <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" title="Profiles Mekanik">
-                            <i class="ki-outline ki-profile-circle"></i>
-                            <span>Profiles</span>
-                        </a>
+                        <div class="sidebar-divider"></div>
 
-                        <a href="{{ route('chat') }}" class="menu-item {{ request()->routeIs('chat') ? 'active' : '' }}" title="Team Chat Messenger">
+                        {{-- ═══ TEAM ═══ --}}
+                        <div class="menu-section-label">Team</div>
+                        <a href="{{ route('chat') }}" class="menu-item {{ request()->routeIs('chat') ? 'active' : '' }}" title="Chat">
                             <i class="ki-outline ki-messages"></i>
                             <span>Chat</span>
+                        </a>
+                        <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" title="Profile">
+                            <i class="ki-outline ki-profile-circle"></i>
+                            <span>Profile</span>
                         </a>
                     @endif
                 </div>

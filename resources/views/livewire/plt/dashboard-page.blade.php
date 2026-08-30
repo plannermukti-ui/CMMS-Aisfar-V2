@@ -197,7 +197,7 @@
                                         </td>
                                         <td>
                                             <span class="text-gray-900 fw-bold fs-7">{{ $wo->equipment->unit ?? 'Unit' }}</span>
-                                            <span class="text-muted fs-9 d-block">{{ $wo->equipment->reffEquip->model ?? '-' }}</span>
+                                            <span class="text-muted fs-9 d-block">{{ $wo->equipment->reffEquip?->model ?? '-' }}</span>
                                         </td>
                                         <td>
                                             <span class="text-gray-800 fw-semibold d-block text-truncate fs-8" style="max-width: 200px;" title="{{ $wo->job_title }}">
@@ -329,8 +329,8 @@
                                             <span class="badge badge-light-dark fs-8 fw-bolder">{{ $eq->unit }}</span>
                                         </td>
                                         <td>
-                                            <span class="text-gray-800 fw-semibold fs-8 d-block">{{ $eq->reffEquip->model ?? 'Model' }}</span>
-                                            <span class="text-muted fs-9">{{ $eq->reffEquip->category ?? '-' }}</span>
+                                            <span class="text-gray-800 fw-semibold fs-8 d-block">{{ $eq->reffEquip?->model ?? 'Model' }}</span>
+                                            <span class="text-muted fs-9">{{ $eq->reffEquip?->category ?? '-' }}</span>
                                         </td>
                                         <td>
                                             <span class="badge badge-light-primary fs-9">{{ $eq->site->site_name ?? 'Default Site' }}</span>

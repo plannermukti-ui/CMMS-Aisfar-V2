@@ -29,7 +29,8 @@ class FloatingChat extends Component
     public function loadUsers()
     {
         if (Auth::check()) {
-            $this->users = User::where('id', '!=', Auth::id())
+            $this->users = User::with('position')
+                ->where('id', '!=', Auth::id())
                 ->orderBy('full_name')
                 ->get();
         }

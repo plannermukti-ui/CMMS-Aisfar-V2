@@ -169,6 +169,9 @@
                                         <button wire:click="openDetailModal('{{ $osr->id }}')" class="btn btn-icon btn-sm btn-light-info rounded-circle" title="Detail Order OSR">
                                             <i class="ki-outline ki-eye fs-5"></i>
                                         </button>
+                                        <button type="button" onclick="window.open('{{ route('plt.osr.print', $osr->id) }}', '_blank')" class="btn btn-icon btn-sm btn-light-success rounded-circle" title="Cetak OSR">
+                                            <i class="ki-outline ki-printer fs-5"></i>
+                                        </button>
                                         <button wire:click="openEditModal('{{ $osr->id }}')" class="btn btn-icon btn-sm btn-light-primary rounded-circle" title="Edit Order OSR">
                                             <i class="ki-outline ki-pencil fs-5"></i>
                                         </button>
@@ -237,7 +240,7 @@
                                     <select wire:model="equipment_id" class="form-select form-select-sm form-select-solid rounded-2">
                                         <option value="">-- Tanpa Unit Khusus --</option>
                                         @foreach($equipments as $eq)
-                                            <option value="{{ $eq->id }}">{{ $eq->unit }} ({{ $eq->reffEquip->model ?? '' }})</option>
+                                            <option value="{{ $eq->id }}">{{ $eq->unit }} ({{ $eq->reffEquip?->model ?? '' }})</option>
                                         @endforeach
                                     </select>
                                 </div>

@@ -130,7 +130,7 @@
                         <tr>
                             <th>No. Work Order</th>
                             <th>Unit & Status Unit</th>
-                            <th>Problem & Action</th>
+                            <th>Deskripsi Masalah</th>
                             <th>Tipe & Prioritas</th>
                             <th>Waktu BD & Ready</th>
                             <th>Status WO</th>
@@ -142,13 +142,18 @@
                                 <!-- WO Number & Date -->
                                 <td>
                                     <div class="d-flex flex-column">
-                                        <a
-                                            href="javascript:void(0)"
-                                            wire:click="openDetailModal('{{ $wo->id }}')"
-                                            class="text-gray-900 text-hover-primary fw-bold fs-6"
-                                        >
-                                            {{ $wo->wo_number }}
-                                        </a>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <a
+                                                href="javascript:void(0)"
+                                                wire:click="openDetailModal('{{ $wo->id }}')"
+                                                class="text-gray-900 text-hover-primary fw-bold fs-6"
+                                            >
+                                                {{ $wo->wo_number }}
+                                            </a>
+                                            <button type="button" onclick="window.open('{{ route('plt.workorder.print', $wo->id) }}', '_blank')" class="btn btn-icon btn-sm btn-light-success rounded-circle" title="Cetak Work Order">
+                                                <i class="ki-outline ki-printer fs-5"></i>
+                                            </button>
+                                        </div>
                                         <span class="text-muted fs-8">
                                             {{ $wo->wo_date->format('d M Y') }}
                                         </span>
@@ -169,47 +174,17 @@
                                                 </span>
                                             </div>
                                             <span class="text-muted fs-8">
-                                                {{ $wo->equipment->reffEquip->model ?? '' }} ({{ $wo->site->site_name ?? 'Site N/A' }})
+                                                {{ $wo->equipment->reffEquip?->model ?? '' }} ({{ $wo->site->site_name ?? 'Site N/A' }})
                                             </span>
                                         </div>
                                     </div>
                                 </td>
 
-                                <!-- Problems & Actions & Obstacles -->
+                                <!-- Problem Description -->
                                 <td>
-                                    <div class="d-flex flex-column gap-1" style="max-width: 270px;">
-                                        @if($wo->tasks->count() > 0)
-                                            @foreach($wo->tasks as $t)
-                                                <div class="d-flex align-items-center gap-1">
-                                                    @if($t->is_primary)
-                                                        <span class="badge badge-sm badge-light-danger fw-bold fs-9 py-0 px-1">Primary</span>
-                                                    @endif
-                                                    <span class="text-gray-900 fw-bold fs-8 text-truncate" title="{{ $t->problem_title }}">
-                                                        {{ $t->problem_title }}
-                                                    </span>
-                                                </div>
-                                                <div class="ps-2 border-start border-2 border-gray-300 mb-1">
-                                                    @foreach($t->subtasks as $st)
-                                                        <div class="d-flex flex-wrap align-items-center gap-1 text-muted fs-9">
-                                                            <span class="text-truncate" style="max-width: 170px;" title="{{ $st->action_title }}">
-                                                                • {{ $st->action_title }}
-                                                            </span>
-                                                            @if($st->obstacle && $st->obstacle !== 'none')
-                                                                <span class="badge {{ $st->obstacle_badge['class'] }} fs-9 py-0 px-1">
-                                                                    {{ $st->obstacle_badge['label'] }}
-                                                                </span>
-                                                            @endif
-                                                            @if($st->spareparts->count() > 0)
-                                                                <span class="text-primary fw-semibold">({{ $st->spareparts->count() }} part)</span>
-                                                            @endif
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endforeach
-                                        @else
-                                            <span class="text-gray-900 fw-bold text-truncate">{{ $wo->job_title }}</span>
-                                        @endif
-                                    </div>
+                                    <p class="text-gray-800 fs-8 mb-0" style="max-width: 270px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="{{ $wo->problem_description }}">
+                                        {{ $wo->problem_description ?: $wo->job_title }}
+                                    </p>
                                 </td>
 
                                 <!-- Type, Opportunity & Priority -->
@@ -330,7 +305,7 @@
                                                     <option value="">-- Pilih Unit Alat --</option>
                                                     @foreach($equipments as $eq)
                                                         <option value="{{ $eq->id }}">
-                                                            {{ $eq->unit }} ({{ $eq->reffEquip->model ?? 'Model N/A' }}) - {{ $eq->reffEquip->make ?? '' }}
+                                                            {{ $eq->unit }} ({{ $eq->reffEquip?->model ?? 'Model N/A' }}) - {{ $eq->reffEquip?->make ?? '' }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -981,7 +956,7 @@
                                 </div>
                                 <div class="col-sm-3">
                                     <div class="fs-8 text-muted">Model & Lokasi Site</div>
-                                    <div class="fs-6 fw-bold text-gray-900">{{ $selectedWorkOrder->equipment->reffEquip->model ?? '-' }}</div>
+                                    <div class="fs-6 fw-bold text-gray-900">{{ $selectedWorkOrder->equipment->reffEquip?->model ?? '-' }}</div>
                                     <span class="text-muted fs-8">{{ $selectedWorkOrder->site->site_name ?? '-' }}</span>
                                 </div>
                                 <div class="col-sm-3">

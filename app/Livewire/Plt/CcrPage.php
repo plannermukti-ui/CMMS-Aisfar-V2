@@ -237,7 +237,7 @@ class CcrPage extends Component
 
         $reports = $query->orderBy('ccr_date', 'desc')->paginate(10);
 
-        $equipments = Equipment::orderBy('unit')->get();
+        $equipments = Equipment::with('reffEquip')->orderBy('unit')->get();
         $components = PlantComponent::orderBy('name')->get();
 
         // Metrics

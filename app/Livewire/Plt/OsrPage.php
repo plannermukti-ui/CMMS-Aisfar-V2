@@ -258,7 +258,7 @@ class OsrPage extends Component
 
         $orders = $query->orderBy('order_date', 'desc')->paginate(10);
 
-        $equipments = Equipment::orderBy('unit')->get();
+        $equipments = Equipment::with('reffEquip')->orderBy('unit')->get();
         $components = PlantComponent::orderBy('name')->get();
         $vendors = Vendor::orderBy('name')->get();
         $workOrders = WorkOrder::orderBy('wo_number', 'desc')->limit(30)->get();

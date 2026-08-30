@@ -155,6 +155,9 @@
                                         <button wire:click="openDetailModal('{{ $far->id }}')" class="btn btn-icon btn-sm btn-light-info rounded-circle" title="Detail Laporan Investigasi">
                                             <i class="ki-outline ki-eye fs-5"></i>
                                         </button>
+                                        <button type="button" onclick="window.open('{{ route('plt.far.print', $far->id) }}', '_blank')" class="btn btn-icon btn-sm btn-light-success rounded-circle" title="Cetak FAR">
+                                            <i class="ki-outline ki-printer fs-5"></i>
+                                        </button>
                                         <button wire:click="openEditModal('{{ $far->id }}')" class="btn btn-icon btn-sm btn-light-primary rounded-circle" title="Edit Laporan FAR">
                                             <i class="ki-outline ki-pencil fs-5"></i>
                                         </button>
@@ -210,7 +213,7 @@
                                         <select wire:model.live="equipment_id" class="form-select form-select-sm bg-white rounded-2" required>
                                             <option value="">-- Pilih Unit --</option>
                                             @foreach($equipments as $eq)
-                                                <option value="{{ $eq->id }}">{{ $eq->unit }} ({{ $eq->reffEquip->model ?? '' }})</option>
+                                                <option value="{{ $eq->id }}">{{ $eq->unit }} ({{ $eq->reffEquip?->model ?? '' }})</option>
                                             @endforeach
                                         </select>
                                     </div>

@@ -231,7 +231,7 @@ class ComponentTrackerPage extends Component
 
         $components = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        $equipments = Equipment::orderBy('unit')->get();
+        $equipments = Equipment::with('reffEquip')->orderBy('unit')->get();
 
         // Metrics
         $totalComponents = PlantComponent::count();

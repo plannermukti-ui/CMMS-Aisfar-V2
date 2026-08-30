@@ -33,6 +33,7 @@ class HmUpdatePage extends Component
 
     // Modal states
     public $showManualModal = false;
+
     public $showUploadModal = false;
 
     protected $listeners = ['refreshHm' => '$refresh'];
@@ -125,7 +126,7 @@ class HmUpdatePage extends Component
         }
 
         $logs = $query->paginate(20);
-        $equipments = Equipment::orderBy('unit')->get();
+        $equipments = Equipment::with('reffEquip')->orderBy('unit')->get();
 
         return view('components.plt.hm-update-page', [
             'logs' => $logs,

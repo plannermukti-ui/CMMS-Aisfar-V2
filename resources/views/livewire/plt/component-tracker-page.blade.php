@@ -176,6 +176,9 @@
                                         <button wire:click="openDetailModal('{{ $comp->id }}')" class="btn btn-icon btn-sm btn-light-info rounded-circle" title="Detail & Riwayat Silsilah">
                                             <i class="ki-outline ki-eye fs-5"></i>
                                         </button>
+                                        <button type="button" onclick="window.open('{{ route('plt.components.print', $comp->id) }}', '_blank')" class="btn btn-icon btn-sm btn-light-success rounded-circle" title="Cetak Komponen">
+                                            <i class="ki-outline ki-printer fs-5"></i>
+                                        </button>
                                         <button wire:click="openTransferModal('{{ $comp->id }}')" class="btn btn-icon btn-sm btn-light-success rounded-circle" title="Rotasi / Pasang / Lepas Komponen">
                                             <i class="ki-outline ki-arrow-up-down fs-5"></i>
                                         </button>
@@ -259,7 +262,7 @@
                                     <select wire:model="equipment_id" class="form-select form-select-sm form-select-solid rounded-2">
                                         <option value="">-- Belum Terpasang (Ready di Workshop) --</option>
                                         @foreach($equipments as $eq)
-                                            <option value="{{ $eq->id }}">{{ $eq->unit }} ({{ $eq->reffEquip->model ?? 'Unit' }})</option>
+                                            <option value="{{ $eq->id }}">{{ $eq->unit }} ({{ $eq->reffEquip?->model ?? 'Unit' }})</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -323,7 +326,7 @@
                                     <select wire:model="target_equipment_id" class="form-select form-select-sm form-select-solid rounded-2" required>
                                         <option value="">-- Pilih Unit --</option>
                                         @foreach($equipments as $eq)
-                                            <option value="{{ $eq->id }}">{{ $eq->unit }} ({{ $eq->reffEquip->model ?? '' }})</option>
+                                            <option value="{{ $eq->id }}">{{ $eq->unit }} ({{ $eq->reffEquip?->model ?? '' }})</option>
                                         @endforeach
                                     </select>
                                 </div>

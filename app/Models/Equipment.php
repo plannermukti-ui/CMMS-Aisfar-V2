@@ -70,6 +70,11 @@ class Equipment extends BaseModel
         return $this->hasMany(EquipmentHm::class, 'equipment_id')->orderBy('date', 'desc');
     }
 
+    public function latestHmLog()
+    {
+        return $this->hasOne(EquipmentHm::class, 'equipment_id')->latestOfMany();
+    }
+
     public function getHmAtDate($date)
     {
         $log = $this->hmLogs()->whereDate('date', $date)->first();

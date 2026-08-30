@@ -263,7 +263,7 @@
                                     </h5>
                                 </div>
                                 <p class="text-[11px] text-gray-500 truncate mt-0.5">
-                                    {{ $u->position->name ?? $u->email }}
+                                    {{ $u->position?->name ?? $u->email }}
                                 </p>
                             </div>
                             <i class="ki-outline ki-right fs-4 text-gray-400 group-hover:text-blue-500 transition-colors"></i>

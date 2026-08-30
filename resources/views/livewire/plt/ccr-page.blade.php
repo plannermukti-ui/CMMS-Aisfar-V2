@@ -185,6 +185,9 @@
                                         <button wire:click="openDetailModal('{{ $ccr->id }}')" class="btn btn-icon btn-sm btn-light-info rounded-circle" title="Detail Evaluasi CCR">
                                             <i class="ki-outline ki-eye fs-5"></i>
                                         </button>
+                                        <button type="button" onclick="window.open('{{ route('plt.ccr.print', $ccr->id) }}', '_blank')" class="btn btn-icon btn-sm btn-light-success rounded-circle" title="Cetak CCR">
+                                            <i class="ki-outline ki-printer fs-5"></i>
+                                        </button>
                                         <button wire:click="openEditModal('{{ $ccr->id }}')" class="btn btn-icon btn-sm btn-light-primary rounded-circle" title="Edit Laporan CCR">
                                             <i class="ki-outline ki-pencil fs-5"></i>
                                         </button>
@@ -234,7 +237,7 @@
                                     <select wire:model.live="equipment_id" class="form-select form-select-sm form-select-solid rounded-2" required>
                                         <option value="">-- Pilih Unit --</option>
                                         @foreach($equipments as $eq)
-                                            <option value="{{ $eq->id }}">{{ $eq->unit }} ({{ $eq->reffEquip->model ?? '' }})</option>
+                                            <option value="{{ $eq->id }}">{{ $eq->unit }} ({{ $eq->reffEquip?->model ?? '' }})</option>
                                         @endforeach
                                     </select>
                                     @error('equipment_id') <span class="text-danger fs-8">{{ $message }}</span> @enderror
@@ -360,7 +363,7 @@
                             <div class="col-md-6">
                                 <div class="p-3 bg-light rounded-3">
                                     <div class="text-muted fs-8 fw-semibold">Unit Equipment</div>
-                                    <div class="fs-6 fw-bold text-gray-900">{{ $activeCcr->equipment->unit ?? 'N/A' }} ({{ $activeCcr->equipment->reffEquip->model ?? '' }})</div>
+                                    <div class="fs-6 fw-bold text-gray-900">{{ $activeCcr->equipment->unit ?? 'N/A' }} ({{ $activeCcr->equipment->reffEquip?->model ?? '' }})</div>
                                     <span class="fs-8 text-muted">HM Saat Inspeksi: {{ $activeCcr->current_unit_hm ? number_format($activeCcr->current_unit_hm, 1).' HM' : '-' }}</span>
                                 </div>
                             </div>
