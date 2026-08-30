@@ -203,7 +203,7 @@ class RfqPage extends Component
             ->paginate(10);
 
         $vendors = Vendor::where('is_active', true)->orderBy('name')->get();
-        $allPrs = PurchaseRequest::whereIn('status', ['approved', 'rfq_created'])->orderBy('created_at', 'desc')->get();
+        $allPrs = PurchaseRequest::with('items')->whereIn('status', ['approved', 'rfq_created'])->orderBy('created_at', 'desc')->get();
 
         return view('livewire.scm.rfq-page', compact('approvedPrs', 'vendors', 'allPrs'));
     }
