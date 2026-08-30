@@ -31,6 +31,10 @@ class HmUpdatePage extends Component
     // Bulk upload fields
     public $excel_file;
 
+    // Modal states
+    public $showManualModal = false;
+    public $showUploadModal = false;
+
     protected $listeners = ['refreshHm' => '$refresh'];
 
     public function mount()
