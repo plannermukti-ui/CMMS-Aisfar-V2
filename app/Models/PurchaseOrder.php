@@ -57,6 +57,7 @@ class PurchaseOrder extends BaseModel
         });
 
         static::deleting(function (self $po) {
+            $po->items()->each(fn ($i) => $i->delete());
             $po->deliveryOrders()->each(fn ($d) => $d->delete());
         });
     }
@@ -79,6 +80,11 @@ class PurchaseOrder extends BaseModel
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderItem::class);
     }
 
     public function deliveryOrders(): HasMany
