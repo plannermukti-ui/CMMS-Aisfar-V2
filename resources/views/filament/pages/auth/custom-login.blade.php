@@ -13,10 +13,10 @@
         
         /* Mascot Background on Desktop */
         @media (min-width: 1024px) {
-            body, .fi-body {
+            body, .fi-body, .fi-simple-layout {
                 background-image: url('{{ asset('images/mascot.jpg') }}') !important;
                 background-size: 55% !important; /* adjust mascot size */
-                background-position: left center !important;
+                background-position: 5% center !important;
                 background-repeat: no-repeat !important;
                 background-attachment: fixed !important;
             }
@@ -37,14 +37,14 @@
 
         /* Mobile fallback */
         @media (max-width: 1023px) {
-            body, .fi-body {
+            body, .fi-body, .fi-simple-layout {
                 background-image: url('{{ asset('images/mascot.jpg') }}') !important;
                 background-position: center top !important;
                 background-size: cover !important;
                 background-attachment: fixed !important;
             }
             /* Darken the background on mobile so form is readable */
-            .fi-simple-layout {
+            .fi-simple-main-ctn {
                 background-color: rgba(0, 0, 0, 0.75) !important;
             }
         }
