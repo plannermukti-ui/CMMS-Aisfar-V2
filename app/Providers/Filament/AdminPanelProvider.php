@@ -67,7 +67,7 @@ class AdminPanelProvider extends PanelProvider
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->profile(CustomEditProfile::class, isSimple: false)
-            ->login()
+            ->login(\App\Filament\Pages\Auth\CustomLogin::class)
             ->registration(CustomRegister::class)
             ->favicon($brandLogo ? $brandLogo.'?v=1' : asset('assets/metronic/media/logos/favicon.ico'))
             ->colors([
