@@ -55,7 +55,7 @@ class GrPage extends Component
 
     public function loadFromDo(string $doId): void
     {
-        $do = DeliveryOrder::with(['items.part', 'purchaseOrder'])->find($doId);
+        $do = DeliveryOrder::with(['items.part', 'purchaseOrder', 'goodsReceipts.items'])->find($doId);
         if ($do) {
             $this->delivery_order_id = $do->id;
             $this->purchase_order_id = $do->purchase_order_id;
@@ -64,11 +64,17 @@ class GrPage extends Component
             $this->items = [];
 
             foreach ($do->items as $it) {
+                $previouslyReceived = $do->getItemReceivedQuantity($it->part_id, $it->part_number);
+                $remaining = max(0, (float) $it->qty_shipped - $previouslyReceived);
+
                 $this->items[] = [
                     'part_id' => $it->part_id,
                     'part_number' => $it->part_number,
                     'part_name' => $it->part_name,
-                    'qty_received' => (float) $it->qty_shipped,
+                    'qty_shipped' => (float) $it->qty_shipped,
+                    'qty_previously_received' => $previouslyReceived,
+                    'qty_remaining' => $remaining,
+                    'qty_received' => $remaining,
                     'unit_price' => $it->part->standard_cost ?? 0,
                 ];
             }
@@ -81,6 +87,19 @@ class GrPage extends Component
     {
         if (! empty($value)) {
             $this->loadFromDo($value);
+        } else {
+            $this->items = [
+                [
+                    'part_id' => '',
+                    'part_number' => '',
+                    'part_name' => '',
+                    'qty_shipped' => 0,
+                    'qty_previously_received' => 0,
+                    'qty_remaining' => 1,
+                    'qty_received' => 1,
+                    'unit_price' => 0,
+                ],
+            ];
         }
     }
 
@@ -96,6 +115,9 @@ class GrPage extends Component
                 'part_id' => '',
                 'part_number' => '',
                 'part_name' => '',
+                'qty_shipped' => 0,
+                'qty_previously_received' => 0,
+                'qty_remaining' => 1,
                 'qty_received' => 1,
                 'unit_price' => 0,
             ],
@@ -109,6 +131,9 @@ class GrPage extends Component
             'part_id' => '',
             'part_number' => '',
             'part_name' => '',
+            'qty_shipped' => 0,
+            'qty_previously_received' => 0,
+            'qty_remaining' => 1,
             'qty_received' => 1,
             'unit_price' => 0,
         ];
@@ -131,26 +156,70 @@ class GrPage extends Component
     public function saveGoodsReceipt(): void
     {
         $this->validate([
-            'items.0.part_name' => 'required|min:2',
-            'items.0.qty_received' => 'required|numeric|min:0.1',
+            'items.*.qty_received' => 'required|numeric|min:0',
         ]);
 
-        DB::transaction(function () {
+        $validItems = array_filter($this->items, fn ($it) => ! empty(trim($it['part_name'] ?? '')) && (float) ($it['qty_received'] ?? 0) > 0);
+
+        if (empty($validItems)) {
+            session()->flash('error', 'Pilih minimal 1 item dengan kuantiti diterima lebih dari 0.');
+
+            return;
+        }
+
+        $isPartial = false;
+        $do = null;
+        $po = null;
+
+        if ($this->delivery_order_id) {
+            $do = DeliveryOrder::with(['items', 'purchaseOrder', 'goodsReceipts.items'])->find($this->delivery_order_id);
+            if ($do) {
+                $po = $do->purchaseOrder;
+                foreach ($do->items as $doItem) {
+                    $prevReceived = $do->getItemReceivedQuantity($doItem->part_id, $doItem->part_number);
+                    $currentReceived = 0;
+                    foreach ($validItems as $curItem) {
+                        if (($curItem['part_id'] && $curItem['part_id'] === $doItem->part_id) || $curItem['part_number'] === $doItem->part_number) {
+                            $currentReceived += (float) ($curItem['qty_received'] ?? 0);
+                        }
+                    }
+                    if (($prevReceived + $currentReceived) < (float) $doItem->qty_shipped) {
+                        $isPartial = true;
+                    }
+                }
+            }
+        } elseif ($this->purchase_order_id) {
+            $po = PurchaseOrder::with(['items', 'goodsReceipts.items'])->find($this->purchase_order_id);
+            if ($po) {
+                foreach ($po->items as $poItem) {
+                    $prevReceived = $po->getItemReceivedQuantity($poItem->part_id, $poItem->part_number);
+                    $currentReceived = 0;
+                    foreach ($validItems as $curItem) {
+                        if (($curItem['part_id'] && $curItem['part_id'] === $poItem->part_id) || $curItem['part_number'] === $poItem->part_number) {
+                            $currentReceived += (float) ($curItem['qty_received'] ?? 0);
+                        }
+                    }
+                    if (($prevReceived + $currentReceived) < (float) $poItem->quantity) {
+                        $isPartial = true;
+                    }
+                }
+            }
+        }
+
+        $grStatus = $isPartial ? 'partial' : 'completed';
+
+        DB::transaction(function () use ($validItems, $grStatus, $do, $po) {
             $gr = GoodsReceipt::create([
-                'purchase_order_id' => $this->purchase_order_id ?: null,
+                'purchase_order_id' => $this->purchase_order_id ?: ($do?->purchase_order_id ?? null),
                 'delivery_order_id' => $this->delivery_order_id ?: null,
                 'site_id' => $this->site_id ?: null,
                 'delivery_order_number' => $this->delivery_order_number,
                 'received_by_id' => Auth::id(),
-                'status' => 'completed',
+                'status' => $grStatus,
                 'notes' => $this->notes,
             ]);
 
-            foreach ($this->items as $item) {
-                if (empty(trim($item['part_name'] ?? ''))) {
-                    continue;
-                }
-
+            foreach ($validItems as $item) {
                 $part = null;
                 if (! empty($item['part_id'])) {
                     $part = Part::find($item['part_id']);
@@ -182,25 +251,17 @@ class GrPage extends Component
             }
 
             // Update DO status
-            if ($this->delivery_order_id) {
-                $do = DeliveryOrder::find($this->delivery_order_id);
-                if ($do) {
-                    $do->update([
-                        'status' => 'received',
-                        'actual_arrival_date' => now(),
-                    ]);
-                }
+            if ($do) {
+                $do->updateCalculatedStatus();
             }
 
             // Update PO status
-            if ($this->purchase_order_id) {
-                $po = PurchaseOrder::find($this->purchase_order_id);
-                if ($po) {
-                    $po->update(['status' => 'received']);
-                }
+            if ($po) {
+                $po->updateCalculatedStatus();
             }
         });
 
+        session()->flash('message', 'Goods Receipt berhasil disimpan dengan status: '.($grStatus === 'completed' ? 'Diterima Lengkap (Completed)' : 'Diterima Sebagian (Partial)'));
         $this->showFormModal = false;
     }
 
@@ -220,7 +281,11 @@ class GrPage extends Component
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $pendingDos = DeliveryOrder::with('purchaseOrder')->whereIn('status', ['in_transit', 'arrived'])->get();
+        $pendingDos = DeliveryOrder::with(['purchaseOrder', 'items', 'goodsReceipts.items'])
+            ->whereIn('status', ['in_transit', 'arrived', 'partially_received'])
+            ->get()
+            ->filter(fn ($d) => $d->has_unreceived_items);
+
         $sites = Site::orderBy('site_name')->get();
         $parts = Part::where('is_active', true)->orderBy('name')->get();
 

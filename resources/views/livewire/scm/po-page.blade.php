@@ -23,7 +23,9 @@
                         <option value="all">Semua Status</option>
                         <option value="approved">Approved</option>
                         <option value="sent_to_vendor">Sent to Vendor</option>
-                        <option value="do_created">DO In Transit</option>
+                        <option value="partially_shipped">Sebagian DO (In Transit)</option>
+                        <option value="do_created">Semua DO Terbit</option>
+                        <option value="partially_received">Diterima Sebagian</option>
                         <option value="received">Completed</option>
                     </select>
                 </div>
@@ -77,7 +79,10 @@
                                         <button type="button" wire:click="openDetailModal('{{ $po->id }}')" class="btn btn-icon btn-sm btn-light-primary" title="Lihat PO">
                                             <i class="ki-outline ki-eye fs-4"></i>
                                         </button>
-                                        @if(in_array($po->status, ['approved', 'sent_to_vendor']))
+                                        <button type="button" onclick="window.open('{{ route('scm.po.print', $po->id) }}', '_blank')" class="btn btn-icon btn-sm btn-light-success" title="Cetak PO">
+                                            <i class="ki-outline ki-printer fs-4"></i>
+                                        </button>
+                                        @if(in_array($po->status, ['approved', 'sent_to_vendor', 'partially_shipped', 'partially_received', 'do_created']) && $po->has_unshipped_items)
                                             <button type="button" wire:click="openGenerateDoModal('{{ $po->id }}')" class="btn btn-sm btn-light-warning fw-bold fs-8" title="Buat Delivery Order (Kirim to Site)">
                                                 <i class="ki-outline ki-delivery-3 fs-5 me-1"></i> Generate DO
                                             </button>
@@ -112,7 +117,7 @@
     <!--begin::Modal Form Generate Delivery Order (DO)-->
     @if($showDoModal && $selectedPo)
         <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-            <div class="modal-dialog modal-dialog-centered mw-650px">
+            <div class="modal-dialog modal-dialog-centered mw-750px">
                 <div class="modal-content rounded-4 border-0 shadow-lg">
                     <div class="modal-header border-bottom py-4 px-6 bg-light-warning">
                         <h4 class="modal-title fw-bolder text-gray-900">
@@ -124,7 +129,7 @@
                     </div>
 
                     <form wire:submit="generateDeliveryOrder">
-                        <div class="modal-body py-5 px-6">
+                        <div class="modal-body py-5 px-6" style="max-height: 75vh; overflow-y: auto;">
                             <div class="alert alert-light-primary p-3 rounded-3 mb-4 fs-8">
                                 Menerbitkan Surat Jalan / Delivery Order untuk PO: <strong>{{ $selectedPo->po_number }}</strong> (Vendor: {{ $selectedPo->vendor->name }}).
                             </div>
@@ -163,6 +168,38 @@
                                     <label class="form-label fs-7 fw-bold">Catatan Pengiriman</label>
                                     <input type="text" wire:model="do_notes" class="form-control form-control-solid fs-7" placeholder="Contoh: Kirim via jalur darat ekspedisi cargo" />
                                 </div>
+                            </div>
+
+                            <!-- Items to Ship in DO -->
+                            <h6 class="fs-7 fw-bold text-gray-900 mb-2">Item yang Akan Dikirim (Kuantiti Parsial)</h6>
+                            <div class="table-responsive mb-2">
+                                <table class="table table-bordered table-sm gs-2 gy-2 fs-8 mb-0">
+                                    <thead class="bg-light fw-bold text-gray-700">
+                                        <tr>
+                                            <th>Part Number & Nama</th>
+                                            <th class="text-center" style="width: 80px;">Qty PO</th>
+                                            <th class="text-center" style="width: 80px;">Sdh Kirim</th>
+                                            <th class="text-center" style="width: 80px;">Sisa Order</th>
+                                            <th class="text-center" style="width: 100px;">Qty Kirim Ini</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($do_items as $index => $item)
+                                            <tr>
+                                                <td>
+                                                    <span class="fw-bold text-gray-900 d-block">{{ $item['part_number'] }}</span>
+                                                    <span class="text-muted fs-9">{{ $item['part_name'] }}</span>
+                                                </td>
+                                                <td class="text-center align-middle">{{ $item['qty_ordered'] }} {{ $item['uom'] }}</td>
+                                                <td class="text-center align-middle text-muted">{{ $item['qty_previously_shipped'] }} {{ $item['uom'] }}</td>
+                                                <td class="text-center align-middle fw-bold text-primary">{{ $item['qty_remaining'] }} {{ $item['uom'] }}</td>
+                                                <td class="align-middle">
+                                                    <input type="number" step="any" min="0" max="{{ $item['qty_remaining'] }}" wire:model="do_items.{{ $index }}.qty_to_ship" class="form-control form-control-sm fs-8 text-center fw-bold text-warning" />
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
@@ -269,7 +306,7 @@
 
                     <div class="modal-footer border-top py-3 px-6 d-flex justify-content-between">
                         <div class="d-flex flex-wrap gap-2">
-                            @if(in_array($selectedPo->status, ['approved', 'sent_to_vendor']))
+                            @if(in_array($selectedPo->status, ['approved', 'sent_to_vendor', 'partially_shipped', 'partially_received', 'do_created']) && $selectedPo->has_unshipped_items)
                                 <button type="button" wire:click="openGenerateDoModal('{{ $selectedPo->id }}')" class="btn btn-warning btn-sm fs-7">
                                     <i class="ki-outline ki-delivery-3 fs-4 me-1"></i> Generate Delivery Order to Site
                                 </button>

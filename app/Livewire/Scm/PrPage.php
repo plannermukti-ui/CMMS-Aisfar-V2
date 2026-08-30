@@ -172,9 +172,10 @@ class PrPage extends Component
     public function deletePr(string $id): void
     {
         $pr = PurchaseRequest::findOrFail($id);
-        
-        if (!in_array($pr->status, ['submitted', 'draft', 'cancelled'])) {
+
+        if (! in_array($pr->status, ['submitted', 'draft', 'cancelled'])) {
             session()->flash('error', 'Hanya PR berstatus draft, submitted, atau cancelled yang dapat dihapus secara permanen.');
+
             return;
         }
 

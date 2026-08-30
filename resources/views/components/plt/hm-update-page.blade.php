@@ -18,6 +18,9 @@
                     </ul>
                 </div>
                 <div class="d-flex align-items-center gap-2 gap-lg-3">
+                    <button type="button" onclick="window.open('{{ route('plt.hm-update.print') }}', '_blank')" class="btn btn-sm btn-light-success fw-bold">
+                        <i class="ki-outline ki-printer fs-2"></i> Cetak Laporan HM
+                    </button>
                     <button type="button" class="btn btn-sm btn-light-primary fw-bold" wire:click="$set('showUploadModal', true)">
                         <i class="ki-outline ki-file-up fs-2"></i> Upload Excel
                     </button>

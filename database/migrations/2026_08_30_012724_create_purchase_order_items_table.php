@@ -29,7 +29,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->foreign('purchase_order_id')->references('id')->on('purchase_orders')->cascadeOnDelete();
-            // Not making PR/RFQ items strict foreign keys with cascade since POs might outlive them or be independent sometimes, 
+            // Not making PR/RFQ items strict foreign keys with cascade since POs might outlive them or be independent sometimes,
             // but normally they would be. Let's add them for referential integrity.
             $table->foreign('purchase_request_item_id')->references('id')->on('purchase_request_items')->nullOnDelete();
             $table->foreign('rfq_quotation_item_id')->references('id')->on('rfq_quotation_items')->nullOnDelete();

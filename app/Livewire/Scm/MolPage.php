@@ -330,7 +330,7 @@ class MolPage extends Component
     {
         DB::transaction(function () use ($id) {
             $mol = MaterialOrder::with('items.part')->findOrFail($id);
-            
+
             // If already issued partially or fully, return the stock
             if (in_array($mol->status, ['issued', 'partially_issued'])) {
                 foreach ($mol->items as $item) {
@@ -339,7 +339,7 @@ class MolPage extends Component
                     }
                 }
             }
-            
+
             $mol->update(['status' => 'cancelled']);
         });
 
@@ -353,10 +353,11 @@ class MolPage extends Component
     public function deleteMol(string $id): void
     {
         $mol = MaterialOrder::findOrFail($id);
-        
+
         // Cannot delete if already processed unless cancelled first
-        if (!in_array($mol->status, ['submitted', 'draft', 'cancelled'])) {
+        if (! in_array($mol->status, ['submitted', 'draft', 'cancelled'])) {
             session()->flash('error', 'Hanya MOL berstatus draft, submitted, atau cancelled yang dapat dihapus secara permanen.');
+
             return;
         }
 

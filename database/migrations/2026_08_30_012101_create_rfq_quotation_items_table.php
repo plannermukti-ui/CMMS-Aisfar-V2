@@ -23,7 +23,7 @@ return new class extends Migration
             $table->boolean('is_selected')->default(false);
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->foreign('rfq_quotation_id')->references('id')->on('rfq_quotations')->cascadeOnDelete();
             $table->foreign('purchase_request_item_id')->references('id')->on('purchase_request_items')->cascadeOnDelete();
         });

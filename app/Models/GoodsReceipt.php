@@ -75,7 +75,8 @@ class GoodsReceipt extends BaseModel
     public function getStatusBadgeAttribute(): array
     {
         return match ($this->status) {
-            'completed' => ['label' => 'Diterima & Stok Bertambah', 'class' => 'badge-light-success text-success'],
+            'completed' => ['label' => 'Diterima Lengkap (Completed)', 'class' => 'badge-light-success text-success'],
+            'partial' => ['label' => 'Diterima Sebagian (Partial)', 'class' => 'badge-light-warning text-warning'],
             default => ['label' => ucfirst($this->status), 'class' => 'badge-light-secondary text-gray-700'],
         };
     }

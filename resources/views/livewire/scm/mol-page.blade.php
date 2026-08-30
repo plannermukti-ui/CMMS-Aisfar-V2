@@ -126,6 +126,9 @@
                                         <button type="button" wire:click="openDetailModal('{{ $mol->id }}')" class="btn btn-icon btn-sm btn-light-primary" title="Lihat Detail MOL">
                                             <i class="ki-outline ki-eye fs-4"></i>
                                         </button>
+                                        <button type="button" onclick="window.open('{{ route('scm.mol.print', $mol->id) }}', '_blank')" class="btn btn-icon btn-sm btn-light-success" title="Cetak MOL">
+                                            <i class="ki-outline ki-printer fs-4"></i>
+                                        </button>
 
                                         @if(in_array($mol->status, ['submitted', 'draft', 'partially_issued', 'approved']))
                                             @if($canIssueAny && $totalShortage > 0)

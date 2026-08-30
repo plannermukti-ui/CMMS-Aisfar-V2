@@ -9,6 +9,9 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
+            <button type="button" onclick="window.open('{{ route('scm.parts.print') }}', '_blank')" class="btn btn-sm btn-light-success fw-bold">
+                <i class="ki-outline ki-printer fs-4 me-1"></i> Cetak Katalog Part
+            </button>
             <a href="{{ route('scm.mol') }}" class="btn btn-sm btn-light-primary fw-bold">
                 <i class="ki-outline ki-handcart fs-4 me-1"></i> Lihat Permintaan MOL
             </a>

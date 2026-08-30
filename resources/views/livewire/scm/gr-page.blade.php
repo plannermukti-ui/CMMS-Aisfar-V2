@@ -71,6 +71,9 @@
                                     <button type="button" wire:click="openDetailModal('{{ $gr->id }}')" class="btn btn-icon btn-sm btn-light-primary" title="Detail GR">
                                         <i class="ki-outline ki-eye fs-4"></i>
                                     </button>
+                                    <button type="button" onclick="window.open('{{ route('scm.gr.print', $gr->id) }}', '_blank')" class="btn btn-icon btn-sm btn-light-success" title="Cetak GR">
+                                        <i class="ki-outline ki-printer fs-4"></i>
+                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -108,7 +111,7 @@
                                     <select wire:model.live="delivery_order_id" class="form-select form-select-solid fs-7">
                                         <option value="">-- Non-DO / Penerimaan Langsung --</option>
                                         @foreach($pendingDos as $pd)
-                                            <option value="{{ $pd->id }}">{{ $pd->do_number }} (PO: {{ $pd->purchaseOrder->po_number ?? '-' }})</option>
+                                            <option value="{{ $pd->id }}">{{ $pd->do_number }} (PO: {{ $pd->purchaseOrder->po_number ?? '-' }} - {{ $pd->status_badge['label'] }})</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -135,54 +138,88 @@
 
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <h6 class="fs-7 fw-bold text-gray-900 mb-0">Item Suku Cadang yang Diterima</h6>
-                                <button type="button" wire:click="addItem" class="btn btn-xs btn-light-primary fw-bold">
-                                    <i class="ki-outline ki-plus fs-6 me-1"></i> Tambah Item
-                                </button>
+                                @if(!$delivery_order_id)
+                                    <button type="button" wire:click="addItem" class="btn btn-xs btn-light-primary fw-bold">
+                                        <i class="ki-outline ki-plus fs-6 me-1"></i> Tambah Item
+                                    </button>
+                                @endif
                             </div>
 
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-sm gs-2 gy-2 fs-8">
-                                    <thead class="bg-light fw-bold text-gray-700">
-                                        <tr>
-                                            <th>Pilih Master Part (Opsional)</th>
-                                            <th>Part Number</th>
-                                            <th>Nama Suku Cadang</th>
-                                            <th style="width: 90px;">Qty Diterima</th>
-                                            <th style="width: 35px;"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($items as $index => $item)
+                            @if($delivery_order_id)
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm gs-2 gy-2 fs-8">
+                                        <thead class="bg-light fw-bold text-gray-700">
                                             <tr>
-                                                <td>
-                                                    <select wire:model.live="items.{{ $index }}.part_id" class="form-select form-select-sm fs-8">
-                                                        <option value="">-- Input Manual --</option>
-                                                        @foreach($parts as $p)
-                                                            <option value="{{ $p->id }}">{{ $p->part_number }} - {{ $p->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <input type="text" wire:model="items.{{ $index }}.part_number" class="form-control form-control-sm fs-8" placeholder="Part Number" />
-                                                </td>
-                                                <td>
-                                                    <input type="text" wire:model="items.{{ $index }}.part_name" class="form-control form-control-sm fs-8" placeholder="Nama Part" required />
-                                                </td>
-                                                <td>
-                                                    <input type="number" step="any" wire:model="items.{{ $index }}.qty_received" class="form-control form-control-sm fs-8 text-center fw-bold text-success" min="0.01" required />
-                                                </td>
-                                                <td class="text-center align-middle">
-                                                    @if(count($items) > 1)
-                                                        <button type="button" wire:click="removeItem({{ $index }})" class="btn btn-xs btn-icon btn-light-danger">
-                                                            <i class="ki-outline ki-cross fs-6"></i>
-                                                        </button>
-                                                    @endif
-                                                </td>
+                                                <th>Part Number & Nama</th>
+                                                <th class="text-center" style="width: 80px;">Qty DO</th>
+                                                <th class="text-center" style="width: 80px;">Sdh Terima</th>
+                                                <th class="text-center" style="width: 80px;">Sisa DO</th>
+                                                <th class="text-center" style="width: 100px;">Qty Diterima</th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($items as $index => $item)
+                                                <tr>
+                                                    <td>
+                                                        <span class="fw-bold text-gray-900 d-block">{{ $item['part_number'] }}</span>
+                                                        <span class="text-muted fs-9">{{ $item['part_name'] }}</span>
+                                                    </td>
+                                                    <td class="text-center align-middle">{{ $item['qty_shipped'] ?? '-' }}</td>
+                                                    <td class="text-center align-middle text-muted">{{ $item['qty_previously_received'] ?? 0 }}</td>
+                                                    <td class="text-center align-middle fw-bold text-primary">{{ $item['qty_remaining'] ?? '-' }}</td>
+                                                    <td class="align-middle">
+                                                        <input type="number" step="any" wire:model="items.{{ $index }}.qty_received" class="form-control form-control-sm fs-8 text-center fw-bold text-success" min="0" required />
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm gs-2 gy-2 fs-8">
+                                        <thead class="bg-light fw-bold text-gray-700">
+                                            <tr>
+                                                <th>Pilih Master Part (Opsional)</th>
+                                                <th>Part Number</th>
+                                                <th>Nama Suku Cadang</th>
+                                                <th style="width: 90px;">Qty Diterima</th>
+                                                <th style="width: 35px;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($items as $index => $item)
+                                                <tr>
+                                                    <td>
+                                                        <select wire:model.live="items.{{ $index }}.part_id" class="form-select form-select-sm fs-8">
+                                                            <option value="">-- Input Manual --</option>
+                                                            @foreach($parts as $p)
+                                                                <option value="{{ $p->id }}">{{ $p->part_number }} - {{ $p->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" wire:model="items.{{ $index }}.part_number" class="form-control form-control-sm fs-8" placeholder="Part Number" />
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" wire:model="items.{{ $index }}.part_name" class="form-control form-control-sm fs-8" placeholder="Nama Part" required />
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" step="any" wire:model="items.{{ $index }}.qty_received" class="form-control form-control-sm fs-8 text-center fw-bold text-success" min="0.01" required />
+                                                    </td>
+                                                    <td class="text-center align-middle">
+                                                        @if(count($items) > 1)
+                                                            <button type="button" wire:click="removeItem({{ $index }})" class="btn btn-xs btn-icon btn-light-danger">
+                                                                <i class="ki-outline ki-cross fs-6"></i>
+                                                            </button>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="modal-footer border-top py-3 px-6">

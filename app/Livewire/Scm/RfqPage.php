@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Scm;
 
+use App\Models\Part;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\RfqQuotation;
+use App\Models\RfqQuotationItem;
 use App\Models\Vendor;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -149,7 +151,7 @@ class RfqPage extends Component
         $this->comparePr = PurchaseRequest::with(['items', 'quotations.vendor', 'quotations.items'])->findOrFail($prId);
         $this->selectedPrId = $prId;
         $this->selected_winners = [];
-        
+
         // Auto-select currently selected quotation items if any
         foreach ($this->comparePr->quotations as $q) {
             foreach ($q->items as $qItem) {
@@ -158,7 +160,7 @@ class RfqPage extends Component
                 }
             }
         }
-        
+
         $this->showCompareModal = true;
     }
 
@@ -176,7 +178,7 @@ class RfqPage extends Component
         $this->grand_total = 0;
         $this->delivery_lead_time_days = 3;
         $this->notes = '';
-        
+
         if ($this->purchase_request_id) {
             $this->initQuotationItems();
         }
@@ -237,24 +239,25 @@ class RfqPage extends Component
     {
         if (empty($this->selected_winners)) {
             $this->addError('selected_winners', 'Silakan pilih setidaknya satu pemenang.');
+
             return;
         }
 
         DB::transaction(function () {
             // Unselect all items for this PR
             $quotationIds = $this->comparePr->quotations->pluck('id');
-            \App\Models\RfqQuotationItem::whereIn('rfq_quotation_id', $quotationIds)->update(['is_selected' => false]);
+            RfqQuotationItem::whereIn('rfq_quotation_id', $quotationIds)->update(['is_selected' => false]);
             RfqQuotation::whereIn('id', $quotationIds)->update(['is_selected' => false]);
 
             // Select chosen items
             $winningQuotationItemIds = array_values($this->selected_winners);
-            \App\Models\RfqQuotationItem::whereIn('id', $winningQuotationItemIds)->update(['is_selected' => true]);
+            RfqQuotationItem::whereIn('id', $winningQuotationItemIds)->update(['is_selected' => true]);
 
             // Load the winning items grouped by Quotation (Vendor)
-            $winningItems = \App\Models\RfqQuotationItem::with(['rfqQuotation.vendor', 'purchaseRequestItem.part'])
+            $winningItems = RfqQuotationItem::with(['rfqQuotation.vendor', 'purchaseRequestItem.part'])
                 ->whereIn('id', $winningQuotationItemIds)
                 ->get();
-            
+
             $groupedByQuotation = $winningItems->groupBy('rfq_quotation_id');
 
             foreach ($groupedByQuotation as $rfqId => $items) {
@@ -302,7 +305,7 @@ class RfqPage extends Component
 
                     // Update standard cost of part based on last purchase price
                     if ($prItem->part_id) {
-                        $part = \App\Models\Part::find($prItem->part_id);
+                        $part = Part::find($prItem->part_id);
                         if ($part) {
                             $part->update(['standard_cost' => $item->unit_price]);
                         }

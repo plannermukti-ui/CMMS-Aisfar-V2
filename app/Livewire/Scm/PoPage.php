@@ -48,18 +48,50 @@ class PoPage extends Component
 
     public string $do_notes = '';
 
+    public array $do_items = [];
+
     public function openDetailModal(string $id): void
     {
-        $this->selectedPo = PurchaseOrder::with(['vendor', 'items', 'purchaseRequest', 'approver', 'deliveryOrders'])->findOrFail($id);
+        $this->selectedPo = PurchaseOrder::with(['vendor', 'items', 'purchaseRequest', 'approver', 'deliveryOrders.items', 'goodsReceipts.items'])->findOrFail($id);
         $this->showDetailModal = true;
     }
 
     public function openGenerateDoModal(string $poId): void
     {
-        $this->selectedPo = PurchaseOrder::with(['items', 'purchaseRequest', 'vendor'])->findOrFail($poId);
+        $this->selectedPo = PurchaseOrder::with(['items', 'purchaseRequest', 'vendor', 'deliveryOrders.items'])->findOrFail($poId);
+
+        if (! $this->selectedPo->has_unshipped_items) {
+            session()->flash('error', 'Seluruh item pada PO ini sudah dibuatkan Delivery Order.');
+
+            return;
+        }
+
         $this->origin_location = 'Vendor ('.$this->selectedPo->vendor->name.')';
         $this->destination_location_name = 'Site Workshop';
         $this->estimated_arrival_date = now()->addDays(3)->format('Y-m-d\TH:i');
+        $this->expedition_name = '';
+        $this->vehicle_plate_number = '';
+        $this->tracking_number = '';
+        $this->do_notes = '';
+        $this->do_items = [];
+
+        foreach ($this->selectedPo->items as $it) {
+            $shipped = $this->selectedPo->getItemShippedQuantity($it->part_id, $it->part_number);
+            $remaining = max(0, (float) $it->quantity - $shipped);
+            if ($remaining > 0) {
+                $this->do_items[] = [
+                    'part_id' => $it->part_id,
+                    'part_number' => $it->part_number,
+                    'part_name' => $it->part_name,
+                    'uom' => $it->uom ?: 'Pcs',
+                    'qty_ordered' => (float) $it->quantity,
+                    'qty_previously_shipped' => $shipped,
+                    'qty_remaining' => $remaining,
+                    'qty_to_ship' => $remaining,
+                ];
+            }
+        }
+
         $this->showDoModal = true;
     }
 
@@ -69,7 +101,23 @@ class PoPage extends Component
             return;
         }
 
-        DB::transaction(function () {
+        $itemsToShip = array_filter($this->do_items, fn ($it) => (float) ($it['qty_to_ship'] ?? 0) > 0);
+
+        if (empty($itemsToShip)) {
+            session()->flash('error', 'Pilih minimal 1 item dengan kuantiti kirim lebih dari 0.');
+
+            return;
+        }
+
+        foreach ($itemsToShip as $it) {
+            if ((float) $it['qty_to_ship'] > (float) $it['qty_remaining']) {
+                session()->flash('error', 'Kuantiti kirim untuk "'.$it['part_name'].'" tidak boleh melebihi sisa pesanan ('.$it['qty_remaining'].' '.$it['uom'].').');
+
+                return;
+            }
+        }
+
+        DB::transaction(function () use ($itemsToShip) {
             $do = DeliveryOrder::create([
                 'purchase_order_id' => $this->selectedPo->id,
                 'origin_location' => $this->origin_location,
@@ -85,22 +133,21 @@ class PoPage extends Component
                 'created_by' => Auth::id(),
             ]);
 
-            if ($this->selectedPo->items) {
-                foreach ($this->selectedPo->items as $it) {
-                    DeliveryOrderItem::create([
-                        'delivery_order_id' => $do->id,
-                        'part_id' => $it->part_id,
-                        'part_number' => $it->part_number,
-                        'part_name' => $it->part_name,
-                        'qty_shipped' => $it->quantity,
-                        'uom' => $it->uom,
-                    ]);
-                }
+            foreach ($itemsToShip as $it) {
+                DeliveryOrderItem::create([
+                    'delivery_order_id' => $do->id,
+                    'part_id' => $it['part_id'] ?: null,
+                    'part_number' => $it['part_number'],
+                    'part_name' => $it['part_name'],
+                    'qty_shipped' => (float) $it['qty_to_ship'],
+                    'uom' => $it['uom'] ?: 'Pcs',
+                ]);
             }
 
-            $this->selectedPo->update(['status' => 'do_created']);
+            $this->selectedPo->updateCalculatedStatus();
         });
 
+        session()->flash('message', 'Delivery Order (DO) berhasil diterbitkan.');
         $this->showDoModal = false;
         if ($this->showDetailModal && $this->selectedPo) {
             $this->selectedPo->refresh();
@@ -135,9 +182,10 @@ class PoPage extends Component
     public function deletePo(string $id): void
     {
         $po = PurchaseOrder::findOrFail($id);
-        
-        if (!in_array($po->status, ['submitted', 'draft', 'cancelled'])) {
+
+        if (! in_array($po->status, ['submitted', 'draft', 'cancelled'])) {
             session()->flash('error', 'Hanya PO berstatus draft, submitted, atau cancelled yang dapat dihapus secara permanen.');
+
             return;
         }
 

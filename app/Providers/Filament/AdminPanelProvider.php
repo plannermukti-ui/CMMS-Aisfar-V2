@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\CustomEditProfile;
+use App\Filament\Pages\Auth\CustomLogin;
 use App\Filament\Pages\Auth\CustomRegister;
 use App\Http\Middleware\RedirectNonAdmins;
 use App\Settings\GeneralSettings;
@@ -67,7 +68,7 @@ class AdminPanelProvider extends PanelProvider
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->profile(CustomEditProfile::class, isSimple: false)
-            ->login(\App\Filament\Pages\Auth\CustomLogin::class)
+            ->login(CustomLogin::class)
             ->registration(CustomRegister::class)
             ->favicon($brandLogo ? $brandLogo.'?v=1' : asset('assets/metronic/media/logos/favicon.ico'))
             ->colors([

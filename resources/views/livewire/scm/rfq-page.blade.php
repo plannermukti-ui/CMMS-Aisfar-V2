@@ -110,9 +110,17 @@
                                     @endforeach
                                 </div>
                             </div>
-                            <button type="button" wire:click="openCreateModal('{{ $comparePr->id }}')" class="btn btn-sm btn-light-primary fw-bold">
-                                <i class="ki-outline ki-plus fs-5 me-1"></i> Input Penawaran Vendor Lain
-                            </button>
+                            <div class="d-flex gap-2">
+                                @php $selQ = $comparePr->quotations->where('is_selected', true)->first(); @endphp
+                                @if($selQ)
+                                    <button type="button" onclick="window.open('{{ route('scm.rfq.print', $selQ->id) }}', '_blank')" class="btn btn-sm btn-light-success fw-bold">
+                                        <i class="ki-outline ki-printer fs-5 me-1"></i> Cetak RFQ
+                                    </button>
+                                @endif
+                                <button type="button" wire:click="openCreateModal('{{ $comparePr->id }}')" class="btn btn-sm btn-light-primary fw-bold">
+                                    <i class="ki-outline ki-plus fs-5 me-1"></i> Input Penawaran Vendor Lain
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Matrix Comparison Table -->

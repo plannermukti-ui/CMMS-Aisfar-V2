@@ -89,6 +89,9 @@
                                         <button type="button" wire:click="openDetailModal('{{ $pr->id }}')" class="btn btn-icon btn-sm btn-light-primary" title="Detail PR">
                                             <i class="ki-outline ki-eye fs-4"></i>
                                         </button>
+                                        <button type="button" onclick="window.open('{{ route('scm.pr.print', $pr->id) }}', '_blank')" class="btn btn-icon btn-sm btn-light-success" title="Cetak PR">
+                                            <i class="ki-outline ki-printer fs-4"></i>
+                                        </button>
                                         @if($pr->status === 'submitted')
                                             <button type="button" wire:click="approvePr('{{ $pr->id }}')" class="btn btn-sm btn-light-success fw-bold fs-8" title="Setujui PR">
                                                 Approve PR
