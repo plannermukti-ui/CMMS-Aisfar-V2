@@ -19,12 +19,18 @@ class CustomRegister extends BaseRegister
     public function form(Schema $schema): Schema
     {
         return $schema
+            ->columns(2)
             ->components([
-                $this->getUsernameFormComponent(),
-                $this->getFullNameFormComponent(),
-                $this->getEmailFormComponent(),
-                $this->getPasswordFormComponent(),
-                $this->getPasswordConfirmationFormComponent(),
+                $this->getUsernameFormComponent()
+                    ->columnSpan(1),
+                $this->getFullNameFormComponent()
+                    ->columnSpan(1),
+                $this->getEmailFormComponent()
+                    ->columnSpanFull(),
+                $this->getPasswordFormComponent()
+                    ->columnSpan(1),
+                $this->getPasswordConfirmationFormComponent()
+                    ->columnSpan(1),
             ]);
     }
 

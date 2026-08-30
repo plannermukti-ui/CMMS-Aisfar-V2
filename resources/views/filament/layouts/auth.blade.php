@@ -20,7 +20,7 @@
             <!-- LEFT COLUMN: Mascot & Plant Info -->
             <div class="cmms-mascot-col">
                 <div class="cmms-mascot-wrap">
-                    <img src="{{ asset('images/mascot.jpg') }}" alt="CMMS Aisfar Mascot" class="cmms-mascot-img">
+                    <img src="{{ asset('images/mascot.png') }}" alt="CMMS Aisfar Mascot" class="cmms-mascot-img">
                 </div>
             </div>
 
@@ -178,11 +178,11 @@
 
         /* Right Side: Form Card */
         .cmms-form-col {
-            flex: 0.9;
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            max-width: 480px;
+            max-width: 560px;
             width: 100%;
         }
 
