@@ -193,6 +193,10 @@ class RfqPage extends Component
 
     public function render()
     {
+        if ($this->showCompareModal && $this->comparePr) {
+            $this->comparePr->loadMissing(['items', 'quotations.vendor']);
+        }
+
         $approvedPrs = PurchaseRequest::with(['items', 'quotations.vendor'])
             ->whereIn('status', ['approved', 'rfq_created', 'po_created'])
             ->orderBy('created_at', 'desc')

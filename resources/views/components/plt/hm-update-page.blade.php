@@ -18,10 +18,10 @@
                     </ul>
                 </div>
                 <div class="d-flex align-items-center gap-2 gap-lg-3">
-                    <button type="button" class="btn btn-sm btn-light-primary fw-bold" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                    <button type="button" class="btn btn-sm btn-light-primary fw-bold" wire:click="$set('showUploadModal', true)">
                         <i class="ki-outline ki-file-up fs-2"></i> Upload Excel
                     </button>
-                    <button type="button" class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#manualInputModal">
+                    <button type="button" class="btn btn-sm btn-primary fw-bold" wire:click="$set('showManualModal', true)">
                         <i class="ki-outline ki-plus fs-2"></i> Input Manual
                     </button>
                 </div>
@@ -127,14 +127,14 @@
         </div>
     </div>
 
-    @teleport('body')
+    @if($showManualModal)
     <!-- Modal Input Manual -->
-    <div wire:ignore.self class="modal fade" id="manualInputModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered mw-500px">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="fw-bold">Input HM Manual</h2>
-                    <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                    <div class="btn btn-icon btn-sm btn-active-icon-primary" wire:click="$set('showManualModal', false)">
                         <i class="ki-outline ki-cross fs-1"></i>
                     </div>
                 </div>
@@ -165,7 +165,7 @@
                         </div>
 
                         <div class="modal-footer flex-center">
-                            <button type="reset" data-bs-dismiss="modal" class="btn btn-light me-3">Batal</button>
+                            <button type="button" wire:click="$set('showManualModal', false)" class="btn btn-light me-3">Batal</button>
                             <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
                                 <span wire:loading.remove wire:target="saveManual">Simpan HM</span>
                                 <span wire:loading wire:target="saveManual" class="indicator-progress">
@@ -178,14 +178,16 @@
             </div>
         </div>
     </div>
+    @endif
 
+    @if($showUploadModal)
     <!-- Modal Upload Excel -->
-    <div wire:ignore.self class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-dialog-centered mw-600px">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="fw-bold">Upload HM Massal (Excel)</h2>
-                    <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                    <div class="btn btn-icon btn-sm btn-active-icon-primary" wire:click="$set('showUploadModal', false)">
                         <i class="ki-outline ki-cross fs-1"></i>
                     </div>
                 </div>
@@ -218,7 +220,7 @@
                         </div>
 
                         <div class="modal-footer flex-center">
-                            <button type="button" data-bs-dismiss="modal" class="btn btn-light me-3">Batal</button>
+                            <button type="button" wire:click="$set('showUploadModal', false)" class="btn btn-light me-3">Batal</button>
                             <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" {{ !$excel_file ? 'disabled' : '' }}>
                                 <span wire:loading.remove wire:target="uploadExcel">Proses Upload</span>
                                 <span wire:loading wire:target="uploadExcel" class="indicator-progress">
@@ -231,7 +233,7 @@
             </div>
         </div>
     </div>
-    @endteleport
+    @endif
 </div>
 
 @push('scripts')
