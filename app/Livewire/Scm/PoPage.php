@@ -50,13 +50,13 @@ class PoPage extends Component
 
     public function openDetailModal(string $id): void
     {
-        $this->selectedPo = PurchaseOrder::with(['vendor', 'purchaseRequest.items', 'approver', 'deliveryOrders'])->findOrFail($id);
+        $this->selectedPo = PurchaseOrder::with(['vendor', 'items', 'purchaseRequest', 'approver', 'deliveryOrders'])->findOrFail($id);
         $this->showDetailModal = true;
     }
 
     public function openGenerateDoModal(string $poId): void
     {
-        $this->selectedPo = PurchaseOrder::with(['purchaseRequest.items', 'vendor'])->findOrFail($poId);
+        $this->selectedPo = PurchaseOrder::with(['items', 'purchaseRequest', 'vendor'])->findOrFail($poId);
         $this->origin_location = 'Vendor ('.$this->selectedPo->vendor->name.')';
         $this->destination_location_name = 'Site Workshop';
         $this->estimated_arrival_date = now()->addDays(3)->format('Y-m-d\TH:i');
@@ -85,8 +85,8 @@ class PoPage extends Component
                 'created_by' => Auth::id(),
             ]);
 
-            if ($this->selectedPo->purchaseRequest) {
-                foreach ($this->selectedPo->purchaseRequest->items as $it) {
+            if ($this->selectedPo->items) {
+                foreach ($this->selectedPo->items as $it) {
                     DeliveryOrderItem::create([
                         'delivery_order_id' => $do->id,
                         'part_id' => $it->part_id,
@@ -148,7 +148,7 @@ class PoPage extends Component
 
     public function render()
     {
-        $pos = PurchaseOrder::with(['vendor', 'purchaseRequest.items', 'approver'])
+        $pos = PurchaseOrder::with(['vendor', 'items', 'approver'])
             ->when($this->search, function ($q) {
                 $term = '%'.strtolower(trim($this->search)).'%';
                 $q->where(function ($sub) use ($term) {

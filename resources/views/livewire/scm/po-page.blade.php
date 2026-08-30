@@ -211,7 +211,7 @@
 
                         <!-- Items Table -->
                         <h6 class="fs-7 fw-bold text-gray-900 mb-2">Rincian Barang yang Dipesan</h6>
-                        @if($selectedPo->purchaseRequest)
+                        @if($selectedPo->items)
                             <div class="table-responsive mb-4">
                                 <table class="table table-bordered table-sm gs-3 gy-2 fs-8 mb-0">
                                     <thead class="bg-light fw-bold text-gray-700">
@@ -223,12 +223,12 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($selectedPo->purchaseRequest->items as $it)
+                                        @foreach($selectedPo->items as $it)
                                             <tr>
                                                 <td class="fw-bold">{{ $it->part_number }}</td>
                                                 <td>{{ $it->part_name }}</td>
                                                 <td class="text-center">{{ $it->quantity }} {{ $it->uom }}</td>
-                                                <td class="text-end">Rp {{ number_format($it->estimated_unit_price, 0, ',', '.') }}</td>
+                                                <td class="text-end">Rp {{ number_format($it->unit_price, 0, ',', '.') }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
