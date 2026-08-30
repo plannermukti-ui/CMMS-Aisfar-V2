@@ -1,5 +1,4 @@
 <x-filament-panels::page.simple>
-    <div class="mascot-bg"></div>
     {{ $this->content }}
 
     <style>
@@ -8,60 +7,65 @@
             --fi-bg: 0 0 0; 
         }
         
-        body, .fi-body {
+        body, .fi-body, .fi-simple-layout {
             background-color: #000000 !important;
-            min-height: 100vh;
         }
-
-        /* Mascot Background positioned on the left */
-        .mascot-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: -1;
-            background-image: url('{{ asset('images/mascot.jpg') }}');
-            background-size: contain;
-            background-position: left center;
-            background-repeat: no-repeat;
-            animation: float-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        /* Adjust login card position on desktop to sit on the right half */
+        
+        /* Mascot Background on Desktop */
         @media (min-width: 1024px) {
-            .fi-simple-page-content {
-                margin-left: auto !important;
-                margin-right: 10% !important;
+            body, .fi-body {
+                background-image: url('{{ asset('images/mascot.jpg') }}') !important;
+                background-size: 55% !important; /* adjust mascot size */
+                background-position: left center !important;
+                background-repeat: no-repeat !important;
+                background-attachment: fixed !important;
+            }
+            
+            /* Push the login card container to the right */
+            .fi-simple-main-ctn {
+                display: flex !important;
+                justify-content: flex-end !important;
+                padding-right: 12vw !important; /* spacing from right edge */
+            }
+            
+            main.fi-simple-main {
                 width: 450px !important;
                 max-width: 100% !important;
+                margin: 0 !important;
             }
         }
 
+        /* Mobile fallback */
         @media (max-width: 1023px) {
-            .mascot-bg {
-                background-position: center top;
-                background-size: cover;
-                opacity: 0.3; /* dim on mobile so form is readable */
+            body, .fi-body {
+                background-image: url('{{ asset('images/mascot.jpg') }}') !important;
+                background-position: center top !important;
+                background-size: cover !important;
+                background-attachment: fixed !important;
+            }
+            /* Darken the background on mobile so form is readable */
+            .fi-simple-layout {
+                background-color: rgba(0, 0, 0, 0.75) !important;
             }
         }
 
-        @keyframes float-in {
-            from { opacity: 0; transform: translateX(-40px); }
-            to { opacity: 1; transform: translateX(0); }
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* Dark Frosted Glass for the main layout */
+        /* Dark Frosted Glass for the main form layout */
         main.fi-simple-main {
             position: relative;
             z-index: 10;
             animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            background: rgba(15, 23, 42, 0.6) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            background: rgba(15, 23, 42, 0.5) !important;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(59, 130, 246, 0.15);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(59, 130, 246, 0.2);
             border-radius: 1.5rem;
+            padding: 2rem !important; /* Extra padding inside the card */
         }
 
         @keyframes slideUpFade {
