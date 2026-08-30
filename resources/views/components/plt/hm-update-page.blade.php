@@ -127,6 +127,7 @@
         </div>
     </div>
 
+    @teleport('body')
     <!-- Modal Input Manual -->
     <div wire:ignore.self class="modal fade" id="manualInputModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered mw-500px">
@@ -230,6 +231,7 @@
             </div>
         </div>
     </div>
+    @endteleport
 </div>
 
 @push('scripts')
