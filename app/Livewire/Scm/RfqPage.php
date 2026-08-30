@@ -154,7 +154,7 @@ class RfqPage extends Component
 
         $this->showFormModal = false;
         if ($this->showCompareModal && $this->comparePr) {
-            $this->comparePr->refresh();
+            $this->comparePr->load(['items', 'quotations.vendor']);
         }
     }
 
