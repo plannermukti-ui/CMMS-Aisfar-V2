@@ -36,6 +36,9 @@ class GeneralSettingsPage extends SettingsPage
                             ->disk('public')
                             ->visibility('public')
                             ->directory('settings/logo')
+                            ->openable()
+                            ->downloadable()
+                            ->deletable(true)
                             ->maxSize(2048)
                             ->columnSpanFull(),
 
