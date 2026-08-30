@@ -121,7 +121,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn (): string => Blade::render('@livewire(\'floating-chat\')'),
+                fn (): string => auth()->check() ? Blade::render('@livewire(\'floating-chat\')') : '',
             );
     }
 }
