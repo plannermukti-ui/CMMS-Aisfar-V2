@@ -1,12 +1,9 @@
 <x-filament-panels::page.simple>
-    <div class="mascot-container">
-        <img src="{{ asset('images/mascot.jpg') }}" alt="Mascot" class="mascot-img">
-    </div>
-
+    <div class="mascot-bg"></div>
     {{ $this->content }}
 
     <style>
-        /* Force pure black mode for seamless mascot blending */
+        /* Force pure black mode */
         :root {
             --fi-bg: 0 0 0; 
         }
@@ -16,67 +13,42 @@
             min-height: 100vh;
         }
 
-        /* Split layout on desktop */
+        /* Mascot Background positioned on the left */
+        .mascot-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background-image: url('{{ asset('images/mascot.jpg') }}');
+            background-size: contain;
+            background-position: left center;
+            background-repeat: no-repeat;
+            animation: float-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Adjust login card position on desktop to sit on the right half */
         @media (min-width: 1024px) {
-            .fi-simple-page {
-                display: flex !important;
-                justify-content: center !important;
-                align-items: center !important;
-                max-width: 100vw !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                min-height: 100vh !important;
-            }
             .fi-simple-page-content {
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: center !important;
-                justify-content: center !important;
-                gap: 6rem;
-                max-width: 1300px !important;
-                width: 100% !important;
-                padding: 2rem !important;
-            }
-            
-            .mascot-container {
-                flex: 1.2;
-                display: flex;
-                justify-content: flex-end;
-                align-items: center;
-                animation: float-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            }
-            
-            .mascot-img {
-                max-width: 100%;
-                max-height: 85vh;
-                object-fit: contain;
-                filter: drop-shadow(0 0 40px rgba(59, 130, 246, 0.2));
-            }
-            
-            main.fi-simple-main {
-                flex: 1;
-                max-width: 420px !important;
-                width: 100%;
-                margin: 0 !important;
+                margin-left: auto !important;
+                margin-right: 10% !important;
+                width: 450px !important;
+                max-width: 100% !important;
             }
         }
 
-        /* Mobile fallback */
         @media (max-width: 1023px) {
-            .mascot-container {
-                display: none; 
-            }
-            .fi-simple-page-content {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
+            .mascot-bg {
+                background-position: center top;
+                background-size: cover;
+                opacity: 0.3; /* dim on mobile so form is readable */
             }
         }
 
         @keyframes float-in {
-            from { opacity: 0; transform: translateX(-40px) scale(0.95); }
-            to { opacity: 1; transform: translateX(0) scale(1); }
+            from { opacity: 0; transform: translateX(-40px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         /* Dark Frosted Glass for the main layout */
@@ -84,10 +56,10 @@
             position: relative;
             z-index: 10;
             animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            background: rgba(15, 23, 42, 0.4) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background: rgba(15, 23, 42, 0.6) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 40px rgba(59, 130, 246, 0.15);
             border-radius: 1.5rem;
         }
