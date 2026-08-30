@@ -236,11 +236,11 @@
                                     <div class="d-flex flex-column gap-1 fs-8">
                                         <div class="d-flex align-items-center text-gray-800">
                                             <i class="ki-outline ki-time fs-6 text-danger me-1" title="Waktu Breakdown"></i>
-                                            <span>{{ $wo->breakdown_at ? $wo->breakdown_at->format('d/m/y H:i') : '-' }}</span>
+                                            <span>{{ $wo->breakdown_at ? $wo->breakdown_at->format('d M Y H:i') : '-' }}</span>
                                         </div>
                                         <div class="d-flex align-items-center {{ $wo->ready_at ? 'text-success' : 'text-muted' }}">
                                             <i class="ki-outline ki-check-circle fs-6 {{ $wo->ready_at ? 'text-success' : 'text-gray-400' }} me-1" title="Waktu Ready"></i>
-                                            <span>{{ $wo->ready_at ? $wo->ready_at->format('d/m/y H:i') : 'Belum Ready' }}</span>
+                                            <span>{{ $wo->ready_at ? $wo->ready_at->format('d M Y H:i') : 'Belum Ready' }}</span>
                                         </div>
                                         @if($wo->downtime_hours > 0)
                                             <span class="badge badge-light-danger fs-9 py-0 px-1 w-fit">

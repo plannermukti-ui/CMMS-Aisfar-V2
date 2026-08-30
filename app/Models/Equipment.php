@@ -64,4 +64,23 @@ class Equipment extends BaseModel
     {
         return $this->unit ?? $this->no ?? 'Equipment #'.$this->id;
     }
+
+    public function hmLogs()
+    {
+        return $this->hasMany(EquipmentHm::class, 'equipment_id')->orderBy('date', 'desc');
+    }
+
+    public function getHmAtDate($date)
+    {
+        $log = $this->hmLogs()->whereDate('date', $date)->first();
+
+        return $log ? $log->hm_value : null;
+    }
+
+    public function getLastHmBeforeDate($date)
+    {
+        $log = $this->hmLogs()->whereDate('date', '<=', $date)->first();
+
+        return $log ? $log->hm_value : 0;
+    }
 }

@@ -5,6 +5,7 @@ use App\Livewire\Plt\CcrPage;
 use App\Livewire\Plt\ComponentTrackerPage;
 use App\Livewire\Plt\DashboardPage as PltDashboardPage;
 use App\Livewire\Plt\FarPage;
+use App\Livewire\Plt\HmUpdatePage;
 use App\Livewire\Plt\OsrPage;
 use App\Livewire\Scm\DashboardPage as ScmDashboardPage;
 use App\Livewire\Scm\DoPage as ScmDoPage;
@@ -40,6 +41,7 @@ Route::middleware(['auth', 'module_access:plt'])->prefix('plt')->group(function 
     })->name('plt.profile');
     Route::get('/workorder', WorkOrderPage::class)->name('plt.workorder');
     Route::get('/components', ComponentTrackerPage::class)->name('plt.components');
+    Route::get('/hm-update', HmUpdatePage::class)->name('plt.hm-update');
     Route::get('/ccr', CcrPage::class)->name('plt.ccr');
     Route::get('/far', FarPage::class)->name('plt.far');
     Route::get('/osr', OsrPage::class)->name('plt.osr');

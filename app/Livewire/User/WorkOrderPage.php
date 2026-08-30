@@ -14,6 +14,8 @@ use App\Models\WorkOrderComment;
 use App\Models\WorkOrderSubtask;
 use App\Models\WorkOrderSubtaskSparepart;
 use App\Models\WorkOrderTask;
+use App\Services\HmInterpolationService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -526,6 +528,22 @@ class WorkOrderPage extends Component
             ]);
         }
 
+        // HM Validation Rule:
+        // Jika current_hm diisi, nilainya tidak boleh lebih kecil dari histori HM terakhir (sebelum atau pada tanggal WO).
+        if (! empty($this->current_hm)) {
+            $equipment = Equipment::find($this->equipment_id);
+            if ($equipment) {
+                // Konversi breakdown_at ke format Y-m-d untuk perbandingan tanggal HM
+                $woDate = Carbon::parse($this->breakdown_at)->format('Y-m-d');
+                $lastHm = $equipment->getLastHmBeforeDate($woDate);
+                if ($this->current_hm < $lastHm) {
+                    throw ValidationException::withMessages([
+                        'current_hm' => 'HM tidak valid! HM terakhir pada tanggal '.Carbon::parse($woDate)->translatedFormat('d M Y')." atau sebelumnya adalah {$lastHm}. Masukkan nilai yang lebih besar atau sama.",
+                    ]);
+                }
+            }
+        }
+
         // Business Rule 2: Head ready_at cannot be earlier than breakdown_at
         if (! empty($this->ready_at) && strtotime($this->ready_at) < strtotime($this->breakdown_at)) {
             throw ValidationException::withMessages([
@@ -723,8 +741,20 @@ class WorkOrderPage extends Component
                     ]);
                 }
             }
+
+            // Sync HM to equipment_hms
+            if (! empty($this->current_hm)) {
+                app(HmInterpolationService::class)->recordHm(
+                    $this->equipment_id,
+                    Carbon::parse($this->breakdown_at)->format('Y-m-d'),
+                    (int) $this->current_hm,
+                    'work_order',
+                    Auth::id()
+                );
+            }
         });
 
+        $this->resetForm();
         $this->showFormModal = false;
         $this->resetForm();
     }

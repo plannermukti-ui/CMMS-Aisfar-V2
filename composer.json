@@ -13,6 +13,7 @@
         "laravel/reverb": "*",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
+        "maatwebsite/excel": "^4.0",
         "pusher/pusher-php-server": "*",
         "spatie/laravel-settings": "^3.9"
     },

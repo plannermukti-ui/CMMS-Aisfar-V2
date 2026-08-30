@@ -429,6 +429,11 @@
                             <span>Components</span>
                         </a>
 
+                        <a href="{{ route('plt.hm-update') }}" class="menu-item {{ request()->routeIs('plt.hm-update') ? 'active' : '' }}" title="Update HM Equipment">
+                            <i class="ki-outline ki-watch"></i>
+                            <span>HM Update</span>
+                        </a>
+
                         <div class="menu-section-label">Reports</div>
                         <a href="{{ route('plt.ccr') }}" class="menu-item {{ request()->routeIs('plt.ccr') ? 'active' : '' }}" title="Component Condition Report (CCR)">
                             <i class="ki-outline ki-clipboard"></i>
