@@ -167,7 +167,7 @@
                             <button type="reset" data-bs-dismiss="modal" class="btn btn-light me-3">Batal</button>
                             <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
                                 <span wire:loading.remove wire:target="saveManual">Simpan HM</span>
-                                <span wire:loading wire:target="saveManual" class="indicator-progress" style="display: block;">
+                                <span wire:loading wire:target="saveManual" class="indicator-progress">
                                     Menyimpan... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
                                 </span>
                             </button>
@@ -220,7 +220,7 @@
                             <button type="button" data-bs-dismiss="modal" class="btn btn-light me-3">Batal</button>
                             <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" {{ !$excel_file ? 'disabled' : '' }}>
                                 <span wire:loading.remove wire:target="uploadExcel">Proses Upload</span>
-                                <span wire:loading wire:target="uploadExcel" class="indicator-progress" style="display: block;">
+                                <span wire:loading wire:target="uploadExcel" class="indicator-progress">
                                     Memproses... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
                                 </span>
                             </button>
