@@ -157,6 +157,32 @@ class PrPage extends Component
         }
     }
 
+    public function cancelPr(string $id): void
+    {
+        $pr = PurchaseRequest::findOrFail($id);
+        $pr->update(['status' => 'cancelled']);
+
+        if ($this->showDetailModal && $this->selectedPr) {
+            $this->selectedPr->refresh();
+        }
+
+        session()->flash('message', 'Purchase Request (PR) berhasil dibatalkan.');
+    }
+
+    public function deletePr(string $id): void
+    {
+        $pr = PurchaseRequest::findOrFail($id);
+        
+        if (!in_array($pr->status, ['submitted', 'draft', 'cancelled'])) {
+            session()->flash('error', 'Hanya PR berstatus draft, submitted, atau cancelled yang dapat dihapus secara permanen.');
+            return;
+        }
+
+        $pr->delete();
+        $this->showDetailModal = false;
+        session()->flash('message', 'Purchase Request berhasil dihapus.');
+    }
+
     public function render()
     {
         $prs = PurchaseRequest::with(['requester', 'approver', 'items', 'materialOrder'])

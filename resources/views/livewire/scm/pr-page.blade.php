@@ -98,6 +98,17 @@
                                                 Bandingkan Vendor
                                             </a>
                                         @endif
+
+                                        @if(in_array($pr->status, ['submitted', 'draft']))
+                                            <button type="button" wire:click="deletePr('{{ $pr->id }}')" wire:confirm="Hapus permanen PR ini?" class="btn btn-icon btn-sm btn-light-danger" title="Hapus PR">
+                                                <i class="ki-outline ki-trash fs-4"></i>
+                                            </button>
+                                        @endif
+                                        @if(!in_array($pr->status, ['cancelled', 'draft']))
+                                            <button type="button" wire:click="cancelPr('{{ $pr->id }}')" wire:confirm="Batalkan dokumen PR ini?" class="btn btn-icon btn-sm btn-light-danger" title="Batalkan PR">
+                                                <i class="ki-outline ki-cross-circle fs-4"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -298,7 +309,7 @@
                     </div>
 
                     <div class="modal-footer border-top py-3 px-6 d-flex justify-content-between">
-                        <div>
+                        <div class="d-flex flex-wrap gap-2">
                             @if($selectedPr->status === 'submitted')
                                 <button type="button" wire:click="approvePr('{{ $selectedPr->id }}')" class="btn btn-success btn-sm fs-7">
                                     <i class="ki-outline ki-check fs-4 me-1"></i> Approve PR Ini
@@ -307,6 +318,17 @@
                                 <a href="{{ route('scm.rfq') }}?pr_id={{ $selectedPr->id }}" class="btn btn-primary btn-sm fs-7">
                                     <i class="ki-outline ki-calculator fs-4 me-1"></i> Lanjut ke RFQ & Bandingkan Vendor
                                 </a>
+                            @endif
+                            
+                            @if(in_array($selectedPr->status, ['submitted', 'draft']))
+                                <button type="button" wire:click="deletePr('{{ $selectedPr->id }}')" wire:confirm="Hapus permanen transaksi PR ini?" class="btn btn-danger btn-sm fs-7 fw-bold">
+                                    <i class="ki-outline ki-trash fs-5 me-1"></i> Hapus
+                                </button>
+                            @endif
+                            @if(!in_array($selectedPr->status, ['cancelled', 'draft']))
+                                <button type="button" wire:click="cancelPr('{{ $selectedPr->id }}')" wire:confirm="Batalkan transaksi PR ini?" class="btn btn-danger btn-sm fs-7 fw-bold">
+                                    <i class="ki-outline ki-cross-circle fs-5 me-1"></i> Batalkan
+                                </button>
                             @endif
                         </div>
                         <button type="button" wire:click="$set('showDetailModal', false)" class="btn btn-light fs-7">Tutup</button>

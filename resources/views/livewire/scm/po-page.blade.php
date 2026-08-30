@@ -82,6 +82,17 @@
                                                 <i class="ki-outline ki-delivery-3 fs-5 me-1"></i> Generate DO
                                             </button>
                                         @endif
+
+                                        @if(in_array($po->status, ['submitted', 'draft']))
+                                            <button type="button" wire:click="deletePo('{{ $po->id }}')" wire:confirm="Hapus permanen PO ini?" class="btn btn-icon btn-sm btn-light-danger" title="Hapus PO">
+                                                <i class="ki-outline ki-trash fs-4"></i>
+                                            </button>
+                                        @endif
+                                        @if(!in_array($po->status, ['cancelled', 'draft']))
+                                            <button type="button" wire:click="cancelPo('{{ $po->id }}')" wire:confirm="Batalkan dokumen PO ini?" class="btn btn-icon btn-sm btn-light-danger" title="Batalkan PO">
+                                                <i class="ki-outline ki-cross-circle fs-4"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -257,10 +268,21 @@
                     </div>
 
                     <div class="modal-footer border-top py-3 px-6 d-flex justify-content-between">
-                        <div>
+                        <div class="d-flex flex-wrap gap-2">
                             @if(in_array($selectedPo->status, ['approved', 'sent_to_vendor']))
                                 <button type="button" wire:click="openGenerateDoModal('{{ $selectedPo->id }}')" class="btn btn-warning btn-sm fs-7">
                                     <i class="ki-outline ki-delivery-3 fs-4 me-1"></i> Generate Delivery Order to Site
+                                </button>
+                            @endif
+
+                            @if(in_array($selectedPo->status, ['submitted', 'draft']))
+                                <button type="button" wire:click="deletePo('{{ $selectedPo->id }}')" wire:confirm="Hapus permanen transaksi PO ini?" class="btn btn-danger btn-sm fs-7 fw-bold">
+                                    <i class="ki-outline ki-trash fs-5 me-1"></i> Hapus
+                                </button>
+                            @endif
+                            @if(!in_array($selectedPo->status, ['cancelled', 'draft']))
+                                <button type="button" wire:click="cancelPo('{{ $selectedPo->id }}')" wire:confirm="Batalkan transaksi PO ini?" class="btn btn-danger btn-sm fs-7 fw-bold">
+                                    <i class="ki-outline ki-cross-circle fs-5 me-1"></i> Batalkan
                                 </button>
                             @endif
                         </div>

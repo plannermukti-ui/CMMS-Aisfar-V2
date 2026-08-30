@@ -326,6 +326,45 @@ class MolPage extends Component
         session()->flash('message', 'MOL berhasil di-Approve (stok keluar) & Purchase Request otomatis dibuat untuk sisa kekurangan.');
     }
 
+    public function cancelMol(string $id): void
+    {
+        DB::transaction(function () use ($id) {
+            $mol = MaterialOrder::with('items.part')->findOrFail($id);
+            
+            // If already issued partially or fully, return the stock
+            if (in_array($mol->status, ['issued', 'partially_issued'])) {
+                foreach ($mol->items as $item) {
+                    if ($item->qty_issued > 0 && $item->part) {
+                        $item->part->increment('stock_on_hand', $item->qty_issued);
+                    }
+                }
+            }
+            
+            $mol->update(['status' => 'cancelled']);
+        });
+
+        if ($this->showDetailModal && $this->selectedMol) {
+            $this->selectedMol->refresh();
+        }
+
+        session()->flash('message', 'MOL berhasil dibatalkan. Stok (jika ada) telah dikembalikan.');
+    }
+
+    public function deleteMol(string $id): void
+    {
+        $mol = MaterialOrder::findOrFail($id);
+        
+        // Cannot delete if already processed unless cancelled first
+        if (!in_array($mol->status, ['submitted', 'draft', 'cancelled'])) {
+            session()->flash('error', 'Hanya MOL berstatus draft, submitted, atau cancelled yang dapat dihapus secara permanen.');
+            return;
+        }
+
+        $mol->delete();
+        $this->showDetailModal = false;
+        session()->flash('message', 'MOL berhasil dihapus.');
+    }
+
     public function render()
     {
         $mols = MaterialOrder::with(['requester', 'approver', 'workOrder.equipment', 'items.part'])

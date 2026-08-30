@@ -120,6 +120,32 @@ class PoPage extends Component
         }
     }
 
+    public function cancelPo(string $id): void
+    {
+        $po = PurchaseOrder::findOrFail($id);
+        $po->update(['status' => 'cancelled']);
+
+        if ($this->showDetailModal && $this->selectedPo) {
+            $this->selectedPo->refresh();
+        }
+
+        session()->flash('message', 'Purchase Order (PO) berhasil dibatalkan.');
+    }
+
+    public function deletePo(string $id): void
+    {
+        $po = PurchaseOrder::findOrFail($id);
+        
+        if (!in_array($po->status, ['submitted', 'draft', 'cancelled'])) {
+            session()->flash('error', 'Hanya PO berstatus draft, submitted, atau cancelled yang dapat dihapus secara permanen.');
+            return;
+        }
+
+        $po->delete();
+        $this->showDetailModal = false;
+        session()->flash('message', 'Purchase Order berhasil dihapus.');
+    }
+
     public function render()
     {
         $pos = PurchaseOrder::with(['vendor', 'purchaseRequest.items', 'approver'])

@@ -145,6 +145,17 @@
                                                 </button>
                                             @endif
                                         @endif
+
+                                        @if(in_array($mol->status, ['submitted', 'draft']))
+                                            <button type="button" wire:click="deleteMol('{{ $mol->id }}')" wire:confirm="Hapus permanen transaksi MOL ini?" class="btn btn-icon btn-sm btn-light-danger" title="Hapus MOL">
+                                                <i class="ki-outline ki-trash fs-4"></i>
+                                            </button>
+                                        @endif
+                                        @if(!in_array($mol->status, ['cancelled', 'draft']))
+                                            <button type="button" wire:click="cancelMol('{{ $mol->id }}')" wire:confirm="Batalkan transaksi MOL ini? Stok (jika sudah dikeluarkan) akan dikembalikan ke gudang." class="btn btn-icon btn-sm btn-light-danger" title="Batalkan MOL">
+                                                <i class="ki-outline ki-cross-circle fs-4"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -435,6 +446,17 @@
                                         <i class="ki-outline ki-document fs-4 me-1"></i> Buat PR Pengadaan ({{ $detailShortage }} Pcs)
                                     </button>
                                 @endif
+                            @endif
+
+                            @if(in_array($selectedMol->status, ['submitted', 'draft']))
+                                <button type="button" wire:click="deleteMol('{{ $selectedMol->id }}')" wire:confirm="Hapus permanen transaksi MOL ini?" class="btn btn-danger btn-sm fs-7 fw-bold">
+                                    <i class="ki-outline ki-trash fs-5 me-1"></i> Hapus
+                                </button>
+                            @endif
+                            @if(!in_array($selectedMol->status, ['cancelled', 'draft']))
+                                <button type="button" wire:click="cancelMol('{{ $selectedMol->id }}')" wire:confirm="Batalkan transaksi MOL ini? Stok (jika sudah dikeluarkan) akan dikembalikan ke gudang." class="btn btn-danger btn-sm fs-7 fw-bold">
+                                    <i class="ki-outline ki-cross-circle fs-5 me-1"></i> Batalkan
+                                </button>
                             @endif
                         </div>
                         <button type="button" wire:click="$set('showDetailModal', false)" class="btn btn-light fs-7">Tutup</button>
