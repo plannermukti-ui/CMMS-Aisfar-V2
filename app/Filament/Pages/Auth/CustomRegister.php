@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Hash;
 
 class CustomRegister extends BaseRegister
 {
+    protected static string $layout = 'filament.layouts.auth';
+
     protected string $view = 'filament.pages.auth.custom-register';
 
     public function form(Schema $schema): Schema
