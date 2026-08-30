@@ -46,7 +46,7 @@ class CcrPage extends Component
 
     public ?float $component_running_hours = null;
 
-    public float $wear_percentage = 0;
+    public $wear_percentage = 0;
 
     public string $physical_condition = 'fair_wear';
 

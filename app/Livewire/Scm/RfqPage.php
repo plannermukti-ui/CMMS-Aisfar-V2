@@ -39,19 +39,19 @@ class RfqPage extends Component
 
     public string $quotation_number = '';
 
-    public float $subtotal_dpp = 0;
+    public $subtotal_dpp = 0;
 
-    public float $discount_amount = 0;
+    public $discount_amount = 0;
 
-    public float $ppn_percentage = 11.00;
+    public $ppn_percentage = 11.00;
 
-    public float $ppn_amount = 0;
+    public $ppn_amount = 0;
 
-    public float $shipping_cost = 0;
+    public $shipping_cost = 0;
 
-    public float $grand_total = 0;
+    public $grand_total = 0;
 
-    public int $delivery_lead_time_days = 3;
+    public $delivery_lead_time_days = 3;
 
     public string $notes = '';
 

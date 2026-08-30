@@ -63,9 +63,9 @@ class OsrPage extends Component
 
     public ?string $received_letter_number = '';
 
-    public float $estimated_cost = 0;
+    public $estimated_cost = 0;
 
-    public float $actual_cost = 0;
+    public $actual_cost = 0;
 
     public int $warranty_period_months = 6;
 

@@ -49,9 +49,9 @@ class ComponentTrackerPage extends Component
 
     public string $status = 'ready_spare';
 
-    public float $accumulated_hours = 0;
+    public $accumulated_hours = 0;
 
-    public float $target_life_hours = 10000;
+    public $target_life_hours = 10000;
 
     public ?float $installed_at_hm = null;
 

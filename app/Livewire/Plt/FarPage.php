@@ -86,9 +86,9 @@ class FarPage extends Component
 
     public string $preventive_actions = '';
 
-    public float $cost_impact_estimate = 0;
+    public $cost_impact_estimate = 0;
 
-    public float $downtime_hours_estimate = 0;
+    public $downtime_hours_estimate = 0;
 
     public string $status = 'under_investigation';
 
