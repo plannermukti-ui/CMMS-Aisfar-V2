@@ -16,7 +16,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 
-#[Fillable(['username', 'full_name', 'name', 'email', 'password', 'status', 'bio', 'photo', 'department_id', 'position_id', 'nik', 'join_year', 'date_of_birth', 'phone', 'address', 'gender', 'allowed_modules', 'created_by', 'updated_by'])]
+#[Fillable(['username', 'full_name', 'name', 'email', 'password', 'status', 'bio', 'photo', 'department_id', 'position_id', 'nik', 'join_year', 'date_of_birth', 'phone', 'address', 'gender', 'allowed_modules', 'site_id', 'created_by', 'updated_by'])]
 #[Hidden(['password', 'remember_token', 'deleted_at'])]
 class User extends Authenticatable implements FilamentUser, HasName
 {
@@ -96,6 +96,27 @@ class User extends Authenticatable implements FilamentUser, HasName
     public function getPermissionsByCategory(): Collection
     {
         return $this->getAllPermissions()->groupBy('category')->sortKeys();
+    }
+
+    public function site()
+    {
+        return $this->belongsTo(Site::class);
+    }
+
+    /**
+     * Get the site ID for data filtering. Returns null if 'all' or no site assigned.
+     */
+    public function getSiteFilterId(): ?string
+    {
+        return $this->site_id;
+    }
+
+    /**
+     * Check if this user is restricted to a specific site.
+     */
+    public function isSiteRestricted(): bool
+    {
+        return filled($this->site_id);
     }
 
     public function department()

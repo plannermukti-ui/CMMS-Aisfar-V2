@@ -5,6 +5,7 @@ namespace App\Livewire\Scm;
 use App\Models\Part;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
+use App\Traits\SiteFilterable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -16,6 +17,7 @@ use Livewire\WithPagination;
 #[Title('SCM - Purchase Request (PR)')]
 class PrPage extends Component
 {
+    use SiteFilterable;
     use WithPagination;
 
     protected string $paginationTheme = 'bootstrap';
@@ -186,7 +188,10 @@ class PrPage extends Component
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $prs = PurchaseRequest::with(['requester', 'approver', 'items', 'materialOrder'])
+            ->when($siteId, fn ($q) => $q->whereHas('materialOrder.workOrder.equipment', fn ($eq) => $eq->where('site_id', $siteId)))
             ->when($this->search, function ($q) {
                 $term = '%'.strtolower(trim($this->search)).'%';
                 $q->where(function ($sub) use ($term) {
@@ -203,7 +208,10 @@ class PrPage extends Component
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $parts = Part::where('is_active', true)->orderBy('name')->get();
+        $parts = Part::where('is_active', true)
+            ->when($siteId, fn ($q) => $q->whereHas('locations', fn ($l) => $l->where('site_id', $siteId)))
+            ->orderBy('name')
+            ->get();
 
         return view('livewire.scm.pr-page', compact('prs', 'parts'));
     }

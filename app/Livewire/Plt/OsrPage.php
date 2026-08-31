@@ -7,6 +7,7 @@ use App\Models\PlantComponent;
 use App\Models\PlantOsr;
 use App\Models\Vendor;
 use App\Models\WorkOrder;
+use App\Traits\SiteFilterable;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -17,6 +18,7 @@ use Livewire\WithPagination;
 #[Title('OSR - Outside Repair Order')]
 class OsrPage extends Component
 {
+    use SiteFilterable;
     use WithPagination;
 
     public string $search = '';
@@ -244,7 +246,10 @@ class OsrPage extends Component
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $query = PlantOsr::with(['equipment', 'component', 'vendor'])
+            ->when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)))
             ->when($this->search, function ($q) {
                 $q->where(function ($sq) {
                     $sq->where('osr_number', 'like', "%{$this->search}%")
@@ -258,16 +263,25 @@ class OsrPage extends Component
 
         $orders = $query->orderBy('order_date', 'desc')->paginate(10);
 
-        $equipments = Equipment::with('reffEquip')->orderBy('unit')->get();
-        $components = PlantComponent::orderBy('name')->get();
+        $equipments = Equipment::with('reffEquip')
+            ->when($siteId, fn ($q) => $q->where('site_id', $siteId))
+            ->orderBy('unit')
+            ->get();
+        $components = PlantComponent::when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)))
+            ->orderBy('name')
+            ->get();
         $vendors = Vendor::orderBy('name')->get();
-        $workOrders = WorkOrder::orderBy('wo_number', 'desc')->limit(30)->get();
+        $workOrders = WorkOrder::when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)))
+            ->orderBy('wo_number', 'desc')
+            ->limit(30)
+            ->get();
 
         // Metrics
-        $totalOsr = PlantOsr::count();
-        $inProgressCount = PlantOsr::whereIn('status', ['dispatched', 'vendor_inspecting', 'quotation_approved', 'in_progress', 'testing_qc'])->count();
-        $receivedCount = PlantOsr::where('status', 'received_at_site')->count();
-        $totalCost = PlantOsr::sum('actual_cost');
+        $base = PlantOsr::query()->when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)));
+        $totalOsr = (clone $base)->count();
+        $inProgressCount = (clone $base)->whereIn('status', ['dispatched', 'vendor_inspecting', 'quotation_approved', 'in_progress', 'testing_qc'])->count();
+        $receivedCount = (clone $base)->where('status', 'received_at_site')->count();
+        $totalCost = (clone $base)->sum('actual_cost');
 
         return view('livewire.plt.osr-page', [
             'orders' => $orders,

@@ -15,6 +15,7 @@ use App\Models\WorkOrderSubtask;
 use App\Models\WorkOrderSubtaskSparepart;
 use App\Models\WorkOrderTask;
 use App\Services\HmInterpolationService;
+use App\Traits\SiteFilterable;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +30,7 @@ use Livewire\WithPagination;
 #[Title('Plant - Work Order')]
 class WorkOrderPage extends Component
 {
+    use SiteFilterable;
     use WithFileUploads, WithPagination;
 
     protected string $paginationTheme = 'bootstrap';
@@ -956,16 +958,21 @@ class WorkOrderPage extends Component
 
     public function getMetricsProperty(): array
     {
+        $siteId = self::getCurrentSiteId();
+        $base = WorkOrder::query()->when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)));
+
         return [
-            'total' => WorkOrder::count(),
-            'in_progress' => WorkOrder::where('status', 'in_progress')->count(),
-            'breakdown' => WorkOrder::where('wo_type', 'breakdown')->whereNotIn('status', ['completed', 'closed'])->count(),
-            'completed' => WorkOrder::whereIn('status', ['completed', 'closed'])->count(),
+            'total' => (clone $base)->count(),
+            'in_progress' => (clone $base)->where('status', 'in_progress')->count(),
+            'breakdown' => (clone $base)->where('wo_type', 'breakdown')->whereNotIn('status', ['completed', 'closed'])->count(),
+            'completed' => (clone $base)->whereIn('status', ['completed', 'closed'])->count(),
         ];
     }
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $query = WorkOrder::with([
             'equipment.reffEquip',
             'site',
@@ -974,6 +981,7 @@ class WorkOrderPage extends Component
             'tasks.subtasks.mechanics.position',
             'tasks.subtasks.spareparts.part',
         ])
+            ->when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)))
             ->when($this->search, function ($q) {
                 $term = '%'.strtolower(trim($this->search)).'%';
                 $q->where(function ($sub) use ($term) {
@@ -1003,10 +1011,17 @@ class WorkOrderPage extends Component
             ->orderBy('created_at', 'desc');
 
         $workOrders = $query->paginate(10);
-        $equipments = Equipment::with(['reffEquip', 'site'])->orderBy('unit')->get();
+        $equipments = Equipment::with(['reffEquip', 'site'])
+            ->when($siteId, fn ($q) => $q->where('site_id', $siteId))
+            ->orderBy('unit')
+            ->get();
         $sites = Site::orderBy('site_name')->get();
         $users = User::with(['position', 'department'])->orderBy('full_name')->get();
-        $masterParts = Part::with(['locations.site'])->where('is_active', true)->orderBy('name')->get();
+        $masterParts = Part::with(['locations.site'])
+            ->when($siteId, fn ($q) => $q->whereHas('locations', fn ($l) => $l->where('site_id', $siteId)))
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
 
         $selectedEquipment = ! empty($this->equipment_id) ? Equipment::with('reffEquip')->find($this->equipment_id) : null;
         $equipType = $selectedEquipment?->reffEquip?->tipe;

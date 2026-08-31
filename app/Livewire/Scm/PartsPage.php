@@ -3,6 +3,7 @@
 namespace App\Livewire\Scm;
 
 use App\Models\Part;
+use App\Traits\SiteFilterable;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -12,6 +13,7 @@ use Livewire\WithPagination;
 #[Title('SCM - Master Spareparts')]
 class PartsPage extends Component
 {
+    use SiteFilterable;
     use WithPagination;
 
     public string $search = '';
@@ -47,7 +49,14 @@ class PartsPage extends Component
 
     public function getMetricsProperty(): array
     {
-        $all = Part::all();
+        $siteId = self::getCurrentSiteId();
+
+        $query = Part::query();
+        if ($siteId) {
+            $query->whereHas('locations', fn ($l) => $l->where('site_id', $siteId));
+        }
+        $all = $query->get();
+
         $totalItems = $all->count();
         $totalStockOnHand = $all->sum('stock_on_hand');
         $outOfStock = $all->filter(fn ($p) => (float) $p->stock_on_hand <= 0)->count();
@@ -65,7 +74,10 @@ class PartsPage extends Component
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $query = Part::with(['vendor', 'locations.site'])
+            ->when($siteId, fn ($q) => $q->whereHas('locations', fn ($l) => $l->where('site_id', $siteId)))
             ->when($this->search, function ($q) {
                 $term = '%'.strtolower(trim($this->search)).'%';
                 $q->where(function ($sub) use ($term) {

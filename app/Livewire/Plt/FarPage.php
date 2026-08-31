@@ -108,7 +108,7 @@ class FarPage extends Component
     public function updatedEquipmentId($value): void
     {
         if ($value) {
-            $eq = Equipment::find($value);
+            $eq = Equipment::with('latestHmLog')->find($value);
             if ($eq) {
                 $this->unit_hm_at_failure = $eq->current_hm ? (float) $eq->current_hm : null;
             }
@@ -259,7 +259,13 @@ class FarPage extends Component
 
     public function render()
     {
+        $user = auth()->user();
+        $siteId = $user?->getSiteFilterId();
+
         $query = PlantFar::with(['equipment.reffEquip', 'component', 'investigator'])
+            ->when($siteId, fn ($q) => $q->where('equipment_id', function ($sub) use ($siteId) {
+                $sub->select('id')->from('equipments')->where('site_id', $siteId);
+            }))
             ->when($this->search, function ($q) {
                 $q->where(function ($sq) {
                     $sq->where('far_number', 'like', "%{$this->search}%")
@@ -273,7 +279,7 @@ class FarPage extends Component
 
         $reports = $query->orderBy('incident_date', 'desc')->paginate(10);
 
-        $equipments = Equipment::with('reffEquip')->orderBy('unit')->get();
+        $equipments = Equipment::when($siteId, fn ($q) => $q->where('site_id', $siteId))->with('reffEquip')->orderBy('unit')->get();
         $components = PlantComponent::orderBy('name')->get();
         $workOrders = WorkOrder::orderBy('wo_number', 'desc')->limit(30)->get();
 

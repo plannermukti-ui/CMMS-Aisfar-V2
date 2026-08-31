@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Observers\ActivityObserver;
+use App\Traits\SiteFilterable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[ObservedBy([ActivityObserver::class])]
 class WorkOrder extends BaseModel
 {
+    use SiteFilterable;
+
     protected $table = 'work_orders';
 
     protected $fillable = [

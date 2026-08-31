@@ -77,6 +77,9 @@
         }
         body { font-family: "{{ $fontFamily }}", sans-serif; background-color: #f8fafc; }
 
+        /* Alpine.js: hide elements before init */
+        [x-cloak] { display: none !important; }
+
         /* ── Page transition ─────────────────────────── */
         #kt_app_content { will-change: opacity, transform; }
 
@@ -159,15 +162,45 @@
             position: relative;
         }
 
-        .slim-sidebar .menu-section-label {
-            font-size: 0.55rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-top: 10px;
-            margin-bottom: 4px;
-            text-align: center;
-            width: 100%;
+        .slim-sidebar .menu-parent {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 76px;
+            height: 56px;
+            border-radius: 10px;
+            margin-bottom: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            user-select: none;
+            text-decoration: none;
+        }
+        .slim-sidebar .menu-parent i.menu-icon {
+            font-size: 22px !important;
+            line-height: 1;
+            margin-bottom: 3px;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+        .slim-sidebar .menu-parent:hover i.menu-icon {
+            transform: translateY(-2px);
+        }
+        .slim-sidebar .menu-parent span {
+            font-size: 9.5px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+        .slim-sidebar .menu-parent i.chevron {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            font-size: 10px !important;
+            transition: transform 0.25s ease;
+            opacity: 0.5;
+        }
+        .slim-sidebar .menu-parent i.chevron.open {
+            transform: rotate(180deg);
         }
 
         .slim-sidebar .sidebar-divider {
@@ -178,9 +211,50 @@
         }
         .theme-plant .slim-sidebar .sidebar-divider { background: #60a5fa; }
         .theme-scm .slim-sidebar .sidebar-divider { background: #ffffff; }
-        .theme-scm .slim-sidebar .menu-section-label { color: rgba(255,255,255,0.4); }
-        .theme-plant .slim-sidebar .menu-section-label { color: rgba(0,0,0,0.3); }
+        .theme-scm .slim-sidebar .menu-parent { color: #94a3b8; }
+        .theme-scm .slim-sidebar .menu-parent i.menu-icon { color: #6ee7b7; }
+        .theme-scm .slim-sidebar .menu-parent:hover { color: #ffffff; background-color: rgba(16, 185, 129, 0.18); }
+        .theme-scm .slim-sidebar .menu-parent:hover i.menu-icon { color: #34d399; }
+        .theme-scm .slim-sidebar .menu-parent.active { color: #ffffff; background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(5, 150, 105, 0.45) 100%); border: 1px solid rgba(52, 211, 153, 0.4); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); }
+        .theme-scm .slim-sidebar .menu-parent.active i.menu-icon { color: #4ade80 !important; }
+        .theme-plant .slim-sidebar .menu-parent { color: #94a3b8; }
+        .theme-plant .slim-sidebar .menu-parent i.menu-icon { color: #93c5fd; }
+        .theme-plant .slim-sidebar .menu-parent:hover { color: #ffffff; background-color: rgba(27, 132, 255, 0.18); }
+        .theme-plant .slim-sidebar .menu-parent:hover i.menu-icon { color: #60a5fa; }
+        .theme-plant .slim-sidebar .menu-parent.active { color: #ffffff; background: linear-gradient(135deg, rgba(27, 132, 255, 0.3) 0%, rgba(13, 110, 253, 0.45) 100%); border: 1px solid rgba(96, 165, 250, 0.4); box-shadow: 0 4px 14px rgba(27, 132, 255, 0.3); }
+        .theme-plant .slim-sidebar .menu-parent.active i.menu-icon { color: #38bdf8 !important; }
         
+        /* ── Submenu items: slightly different from parent menu-item ── */
+        .slim-sidebar .submenu-group .menu-item {
+            width: 68px;
+            height: 48px;
+            border-left: 2px solid transparent;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 0;
+            margin-left: 4px;
+        }
+        .slim-sidebar .submenu-group .menu-item i {
+            font-size: 18px !important;
+        }
+        .slim-sidebar .submenu-group .menu-item span {
+            font-size: 8.5px;
+            font-weight: 500;
+        }
+        /* SCM submenu */
+        .theme-scm .slim-sidebar .submenu-group .menu-item { color: #6b7280; }
+        .theme-scm .slim-sidebar .submenu-group .menu-item i { color: #4ade80 !important; opacity: 0.6; }
+        .theme-scm .slim-sidebar .submenu-group .menu-item:hover { color: #d1fae5; background-color: rgba(16, 185, 129, 0.1); }
+        .theme-scm .slim-sidebar .submenu-group .menu-item:hover i { opacity: 1; }
+        .theme-scm .slim-sidebar .submenu-group .menu-item.active { color: #ffffff; background-color: rgba(16, 185, 129, 0.15); border-left-color: #4ade80; }
+        .theme-scm .slim-sidebar .submenu-group .menu-item.active i { opacity: 1; }
+        /* Plant submenu */
+        .theme-plant .slim-sidebar .submenu-group .menu-item { color: #6b7280; }
+        .theme-plant .slim-sidebar .submenu-group .menu-item i { color: #93c5fd !important; opacity: 0.6; }
+        .theme-plant .slim-sidebar .submenu-group .menu-item:hover { color: #e0e7ff; background-color: rgba(27, 132, 255, 0.1); }
+        .theme-plant .slim-sidebar .submenu-group .menu-item:hover i { opacity: 1; }
+        .theme-plant .slim-sidebar .submenu-group .menu-item.active { color: #ffffff; background-color: rgba(27, 132, 255, 0.15); border-left-color: #60a5fa; }
+        .theme-plant .slim-sidebar .submenu-group .menu-item.active i { opacity: 1; }
+
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -365,129 +439,253 @@
                 <div class="w-100 flex-grow-1 overflow-y-auto overflow-x-hidden scrollbar-hide px-2">
                     @if($isScm)
                         <!-- SCM Navigation -->
-                        <div class="menu-section-label">Main</div>
-                        <a href="{{ route('scm.dashboard') }}" class="menu-item {{ request()->routeIs('scm.dashboard') ? 'active' : '' }}" title="SCM Dashboard">
-                            <i class="ki-outline ki-chart-simple-3"></i>
-                            <span>Dashboard</span>
-                        </a>
+                        @php
+                            $isInventoryActive = request()->routeIs('scm.parts') || request()->routeIs('scm.opname');
+                            $isPurchasingActive = request()->routeIs('scm.mol') || request()->routeIs('scm.pr') || request()->routeIs('scm.rfq') || request()->routeIs('scm.po');
+                            $isLogisticsActive = request()->routeIs('scm.do') || request()->routeIs('scm.gr');
+                            $isScmTeamActive = request()->routeIs('chat');
+                            $scmAlpineData = [
+                                'openInventory' => $isInventoryActive,
+                                'openPurchasing' => $isPurchasingActive,
+                                'openLogistics' => $isLogisticsActive,
+                                'openTeam' => $isScmTeamActive,
+                            ];
+                        @endphp
+                        <div x-data="{{ json_encode($scmAlpineData) }}">
+                            <!-- Dashboard (always visible) -->
+                            <a href="{{ route('scm.dashboard') }}" class="menu-item {{ request()->routeIs('scm.dashboard') ? 'active' : '' }}" title="SCM Dashboard">
+                                <i class="ki-outline ki-chart-simple-3"></i>
+                                <span>Dashboard</span>
+                            </a>
 
-                        <div class="menu-section-label">Inventory</div>
-                        <a href="{{ route('scm.parts') }}" class="menu-item {{ request()->routeIs('scm.parts') ? 'active' : '' }}" title="Master Spareparts Catalog">
-                            <i class="ki-outline ki-cube-2"></i>
-                            <span>Spareparts</span>
-                        </a>
+                            <div class="sidebar-divider"></div>
 
-                        <a href="{{ route('scm.opname') }}" class="menu-item {{ request()->routeIs('scm.opname') ? 'active' : '' }}" title="Stock Opname & Berita Acara">
-                            <i class="ki-outline ki-clipboard"></i>
-                            <span>Opname</span>
-                        </a>
-                        
-                        <div class="menu-section-label">Purchasing</div>
-                        <a href="{{ route('scm.mol') }}" class="menu-item {{ request()->routeIs('scm.mol') ? 'active' : '' }}" title="MOL (Mechanic Order Part)">
-                            <i class="ki-outline ki-handcart"></i>
-                            <span>MOL</span>
-                        </a>
+                            <!-- Inventory Group -->
+                            <div class="menu-parent {{ $isInventoryActive ? 'active' : '' }}" @click="openInventory = !openInventory" title="Inventory">
+                                <i class="ki-outline ki-cube-2 menu-icon"></i>
+                                <span>Inventory</span>
+                                <i class="ki-outline ki-down chevron {{ $isInventoryActive ? 'open' : '' }}"></i>
+                            </div>
+                            <div x-show="openInventory" x-transition x-cloak class="submenu-group">
+                                <a href="{{ route('scm.parts') }}" class="menu-item {{ request()->routeIs('scm.parts') ? 'active' : '' }}" title="Master Spareparts Catalog">
+                                    <i class="ki-outline ki-cube-2"></i>
+                                    <span>Spareparts</span>
+                                </a>
+                                <a href="{{ route('scm.opname') }}" class="menu-item {{ request()->routeIs('scm.opname') ? 'active' : '' }}" title="Stock Opname & Berita Acara">
+                                    <i class="ki-outline ki-clipboard"></i>
+                                    <span>Opname</span>
+                                </a>
+                            </div>
 
-                        <a href="{{ route('scm.pr') }}" class="menu-item {{ request()->routeIs('scm.pr') ? 'active' : '' }}" title="PR (Purchase Request)">
-                            <i class="ki-outline ki-document"></i>
-                            <span>PR</span>
-                        </a>
+                            <div class="sidebar-divider"></div>
 
-                        <a href="{{ route('scm.rfq') }}" class="menu-item {{ request()->routeIs('scm.rfq') ? 'active' : '' }}" title="RFQ & Evaluasi Vendor">
-                            <i class="ki-outline ki-calculator"></i>
-                            <span>RFQ</span>
-                        </a>
+                            <!-- Purchasing Group -->
+                            <div class="menu-parent {{ $isPurchasingActive ? 'active' : '' }}" @click="openPurchasing = !openPurchasing" title="Purchasing">
+                                <i class="ki-outline ki-basket menu-icon"></i>
+                                <span>Purchasing</span>
+                                <i class="ki-outline ki-down chevron {{ $isPurchasingActive ? 'open' : '' }}"></i>
+                            </div>
+                            <div x-show="openPurchasing" x-transition x-cloak class="submenu-group">
+                                <a href="{{ route('scm.mol') }}" class="menu-item {{ request()->routeIs('scm.mol') ? 'active' : '' }}" title="MOL (Mechanic Order Part)">
+                                    <i class="ki-outline ki-handcart"></i>
+                                    <span>MOL</span>
+                                </a>
+                                <a href="{{ route('scm.pr') }}" class="menu-item {{ request()->routeIs('scm.pr') ? 'active' : '' }}" title="PR (Purchase Request)">
+                                    <i class="ki-outline ki-document"></i>
+                                    <span>PR</span>
+                                </a>
+                                <a href="{{ route('scm.rfq') }}" class="menu-item {{ request()->routeIs('scm.rfq') ? 'active' : '' }}" title="RFQ & Evaluasi Vendor">
+                                    <i class="ki-outline ki-calculator"></i>
+                                    <span>RFQ</span>
+                                </a>
+                                <a href="{{ route('scm.po') }}" class="menu-item {{ request()->routeIs('scm.po') ? 'active' : '' }}" title="PO (Purchase Order)">
+                                    <i class="ki-outline ki-notepad-edit"></i>
+                                    <span>PO</span>
+                                </a>
+                            </div>
 
-                        <a href="{{ route('scm.po') }}" class="menu-item {{ request()->routeIs('scm.po') ? 'active' : '' }}" title="PO (Purchase Order)">
-                            <i class="ki-outline ki-notepad-edit"></i>
-                            <span>PO</span>
-                        </a>
+                            <div class="sidebar-divider"></div>
 
-                        <div class="menu-section-label">Logistics</div>
-                        <a href="{{ route('scm.do') }}" class="menu-item {{ request()->routeIs('scm.do') ? 'active' : '' }}" title="DO (Delivery Order to Site)">
-                            <i class="ki-outline ki-delivery-3"></i>
-                            <span>Delivery</span>
-                        </a>
+                            <!-- Logistics Group -->
+                            <div class="menu-parent {{ $isLogisticsActive ? 'active' : '' }}" @click="openLogistics = !openLogistics" title="Logistics">
+                                <i class="ki-outline ki-delivery-3 menu-icon"></i>
+                                <span>Logistics</span>
+                                <i class="ki-outline ki-down chevron {{ $isLogisticsActive ? 'open' : '' }}"></i>
+                            </div>
+                            <div x-show="openLogistics" x-transition x-cloak class="submenu-group">
+                                <a href="{{ route('scm.do') }}" class="menu-item {{ request()->routeIs('scm.do') ? 'active' : '' }}" title="DO (Delivery Order to Site)">
+                                    <i class="ki-outline ki-delivery-3"></i>
+                                    <span>Delivery</span>
+                                </a>
+                                <a href="{{ route('scm.gr') }}" class="menu-item {{ request()->routeIs('scm.gr') ? 'active' : '' }}" title="GR (Goods Receipt Gudang)">
+                                    <i class="ki-outline ki-package"></i>
+                                    <span>Receipt</span>
+                                </a>
+                            </div>
 
-                        <a href="{{ route('scm.gr') }}" class="menu-item {{ request()->routeIs('scm.gr') ? 'active' : '' }}" title="GR (Goods Receipt Gudang)">
-                            <i class="ki-outline ki-package"></i>
-                            <span>Receipt</span>
-                        </a>
+                            <div class="sidebar-divider"></div>
 
-                        <div class="menu-section-label">Team</div>
-                        <a href="{{ route('chat') }}" class="menu-item {{ request()->routeIs('chat') ? 'active' : '' }}" title="Team Chat Messenger">
-                            <i class="ki-outline ki-messages"></i>
-                            <span>Chat</span>
-                        </a>
+                            <!-- Team Group -->
+                            <div class="menu-parent {{ $isScmTeamActive ? 'active' : '' }}" @click="openTeam = !openTeam" title="Team">
+                                <i class="ki-outline ki-people menu-icon"></i>
+                                <span>Team</span>
+                                <i class="ki-outline ki-down chevron {{ $isScmTeamActive ? 'open' : '' }}"></i>
+                            </div>
+                            <div x-show="openTeam" x-transition x-cloak class="submenu-group">
+                                <a href="{{ route('chat') }}" class="menu-item {{ request()->routeIs('chat') ? 'active' : '' }}" title="Team Chat Messenger">
+                                    <i class="ki-outline ki-messages"></i>
+                                    <span>Chat</span>
+                                </a>
+                            </div>
+                        </div>
                     @else
                         <!-- PLANT Navigation -->
-                        {{-- ═══ OVERVIEW ═══ --}}
-                        <div class="menu-section-label">Overview</div>
-                        <a href="{{ route('plt.dashboard') }}" class="menu-item {{ request()->routeIs('plt.dashboard') ? 'active' : '' }}" title="Dashboard">
-                            <i class="ki-outline ki-chart-simple-3"></i>
-                            <span>Dashboard</span>
-                        </a>
+                        @php
+                            $isPmActive = request()->routeIs('plt.pm-*');
+                            $isOpsActive = request()->routeIs('plt.workorder') || request()->routeIs('plt.hm-update');
+                            $isAssetsActive = request()->routeIs('plt.components');
+                            $isAnalysisActive = request()->routeIs('plt.ccr') || request()->routeIs('plt.far') || request()->routeIs('plt.osr');
+                            $isTeamActive = request()->routeIs('chat') || request()->routeIs('profile');
+                            $alpineData = [
+                                'openOps' => $isOpsActive,
+                                'openAssets' => $isAssetsActive,
+                                'openPm' => $isPmActive,
+                                'openAnalysis' => $isAnalysisActive,
+                                'openTeam' => $isTeamActive,
+                            ];
+                        @endphp
+                        <div x-data="{{ json_encode($alpineData) }}">
+                            <!-- Dashboard (always visible) -->
+                            <a href="{{ route('plt.dashboard') }}" class="menu-item {{ request()->routeIs('plt.dashboard') ? 'active' : '' }}" title="Dashboard">
+                                <i class="ki-outline ki-chart-simple-3"></i>
+                                <span>Dashboard</span>
+                            </a>
 
-                        <div class="sidebar-divider"></div>
+                            <div class="sidebar-divider"></div>
 
-                        {{-- ═══ OPERATIONS ═══ --}}
-                        <div class="menu-section-label">Operations</div>
-                        <a href="{{ route('plt.workorder') }}" class="menu-item {{ request()->routeIs('plt.workorder') ? 'active' : '' }}" title="Work Order">
-                            <i class="ki-outline ki-wrench"></i>
-                            <span>Work Order</span>
-                        </a>
-                        <a href="{{ route('plt.hm-update') }}" class="menu-item {{ request()->routeIs('plt.hm-update') ? 'active' : '' }}" title="HM Update">
-                            <i class="ki-outline ki-watch"></i>
-                            <span>HM Update</span>
-                        </a>
+                            <!-- Operations Group -->
+                            <div class="menu-parent {{ $isOpsActive ? 'active' : '' }}" @click="openOps = !openOps" title="Operations">
+                                <i class="ki-outline ki-wrench menu-icon"></i>
+                                <span>Operations</span>
+                                <i class="ki-outline ki-down chevron {{ $isOpsActive ? 'open' : '' }}"></i>
+                            </div>
+                            <div x-show="openOps" x-transition x-cloak class="submenu-group">
+                                <a href="{{ route('plt.workorder') }}" class="menu-item {{ request()->routeIs('plt.workorder') ? 'active' : '' }}" title="Work Order">
+                                    <i class="ki-outline ki-wrench"></i>
+                                    <span>Work Order</span>
+                                </a>
+                                <a href="{{ route('plt.hm-update') }}" class="menu-item {{ request()->routeIs('plt.hm-update') ? 'active' : '' }}" title="HM Update">
+                                    <i class="ki-outline ki-watch"></i>
+                                    <span>HM Update</span>
+                                </a>
+                            </div>
 
-                        <div class="sidebar-divider"></div>
+                            <div class="sidebar-divider"></div>
 
-                        {{-- ═══ ASSET TRACKING ═══ --}}
-                        <div class="menu-section-label">Assets</div>
-                        <a href="{{ route('plt.components') }}" class="menu-item {{ request()->routeIs('plt.components') ? 'active' : '' }}" title="Component Tracker">
-                            <i class="ki-outline ki-cube-2"></i>
-                            <span>Components</span>
-                        </a>
+                            <!-- Assets Group -->
+                            <div class="menu-parent {{ $isAssetsActive ? 'active' : '' }}" @click="openAssets = !openAssets" title="Assets">
+                                <i class="ki-outline ki-cube-3 menu-icon"></i>
+                                <span>Assets</span>
+                                <i class="ki-outline ki-down chevron {{ $isAssetsActive ? 'open' : '' }}"></i>
+                            </div>
+                            <div x-show="openAssets" x-transition x-cloak class="submenu-group">
+                                <a href="{{ route('plt.components') }}" class="menu-item {{ request()->routeIs('plt.components') ? 'active' : '' }}" title="Component Tracker">
+                                    <i class="ki-outline ki-cube-2"></i>
+                                    <span>Components</span>
+                                </a>
+                            </div>
 
-                        <div class="sidebar-divider"></div>
+                            <div class="sidebar-divider"></div>
 
-                        {{-- ═══ ANALYSIS & REPORTS ═══ --}}
-                        <div class="menu-section-label">Analysis</div>
-                        <a href="{{ route('plt.ccr') }}" class="menu-item {{ request()->routeIs('plt.ccr') ? 'active' : '' }}" title="Condition Report (CCR)">
-                            <i class="ki-outline ki-clipboard"></i>
-                            <span>CCR</span>
-                        </a>
-                        <a href="{{ route('plt.far') }}" class="menu-item {{ request()->routeIs('plt.far') ? 'active' : '' }}" title="Failure Analysis (FAR)">
-                            <i class="ki-outline ki-shield-cross"></i>
-                            <span>FAR</span>
-                        </a>
-                        <a href="{{ route('plt.osr') }}" class="menu-item {{ request()->routeIs('plt.osr') ? 'active' : '' }}" title="Outside Repair (OSR)">
-                            <i class="ki-outline ki-delivery-3"></i>
-                            <span>OSR</span>
-                        </a>
+                            <!-- Preventive Maintenance Group -->
+                            <div class="menu-parent {{ $isPmActive ? 'active' : '' }}" @click="openPm = !openPm" title="Preventive Maintenance">
+                                <i class="ki-outline ki-calendar menu-icon"></i>
+                                <span>Preventive</span>
+                                <i class="ki-outline ki-down chevron {{ $isPmActive ? 'open' : '' }}"></i>
+                            </div>
+                            <div x-show="openPm" x-transition x-cloak class="submenu-group">
+                                <a href="{{ route('plt.pm-monitoring') }}" class="menu-item {{ request()->routeIs('plt.pm-monitoring') ? 'active' : '' }}" title="PM Monitoring Service">
+                                    <i class="ki-outline ki-chart-line-down"></i>
+                                    <span>Monitoring</span>
+                                </a>
+                                <a href="{{ route('plt.pm-service-types') }}" class="menu-item {{ request()->routeIs('plt.pm-service-types') ? 'active' : '' }}" title="PM Service Types - Master Data">
+                                    <i class="ki-outline ki-setting-3"></i>
+                                    <span>Service Types</span>
+                                </a>
+                                <a href="{{ route('plt.pm-history') }}" class="menu-item {{ request()->routeIs('plt.pm-history') ? 'active' : '' }}" title="PM History Service">
+                                    <i class="ki-outline ki-clock"></i>
+                                    <span>History PM</span>
+                                </a>
+                            </div>
 
-                        <div class="sidebar-divider"></div>
+                            <div class="sidebar-divider"></div>
 
-                        {{-- ═══ TEAM ═══ --}}
-                        <div class="menu-section-label">Team</div>
-                        <a href="{{ route('chat') }}" class="menu-item {{ request()->routeIs('chat') ? 'active' : '' }}" title="Chat">
-                            <i class="ki-outline ki-messages"></i>
-                            <span>Chat</span>
-                        </a>
-                        <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" title="Profile">
-                            <i class="ki-outline ki-profile-circle"></i>
-                            <span>Profile</span>
-                        </a>
+                            <!-- Analysis Group -->
+                            <div class="menu-parent {{ $isAnalysisActive ? 'active' : '' }}" @click="openAnalysis = !openAnalysis" title="Analysis">
+                                <i class="ki-outline ki-chart-line-down menu-icon"></i>
+                                <span>Analysis</span>
+                                <i class="ki-outline ki-down chevron {{ $isAnalysisActive ? 'open' : '' }}"></i>
+                            </div>
+                            <div x-show="openAnalysis" x-transition x-cloak class="submenu-group">
+                                <a href="{{ route('plt.ccr') }}" class="menu-item {{ request()->routeIs('plt.ccr') ? 'active' : '' }}" title="Condition Report (CCR)">
+                                    <i class="ki-outline ki-clipboard"></i>
+                                    <span>CCR</span>
+                                </a>
+                                <a href="{{ route('plt.far') }}" class="menu-item {{ request()->routeIs('plt.far') ? 'active' : '' }}" title="Failure Analysis (FAR)">
+                                    <i class="ki-outline ki-shield-cross"></i>
+                                    <span>FAR</span>
+                                </a>
+                                <a href="{{ route('plt.osr') }}" class="menu-item {{ request()->routeIs('plt.osr') ? 'active' : '' }}" title="Outside Repair (OSR)">
+                                    <i class="ki-outline ki-delivery-3"></i>
+                                    <span>OSR</span>
+                                </a>
+                            </div>
+
+                            <div class="sidebar-divider"></div>
+
+                            <!-- Team Group -->
+                            <div class="menu-parent {{ $isTeamActive ? 'active' : '' }}" @click="openTeam = !openTeam" title="Team">
+                                <i class="ki-outline ki-people menu-icon"></i>
+                                <span>Team</span>
+                                <i class="ki-outline ki-down chevron {{ $isTeamActive ? 'open' : '' }}"></i>
+                            </div>
+                            <div x-show="openTeam" x-transition x-cloak class="submenu-group">
+                                <a href="{{ route('chat') }}" class="menu-item {{ request()->routeIs('chat') ? 'active' : '' }}" title="Chat">
+                                    <i class="ki-outline ki-messages"></i>
+                                    <span>Chat</span>
+                                </a>
+                                <a href="{{ route('profile') }}" class="menu-item {{ request()->routeIs('profile') ? 'active' : '' }}" title="Profile">
+                                    <i class="ki-outline ki-profile-circle"></i>
+                                    <span>Profile</span>
+                                </a>
+                            </div>
+                        </div>
                     @endif
                 </div>
                 
                 <!-- Sidebar Footer (Quick Switcher) -->
                 <div class="sidebar-footer pb-4">
-                    <a href="{{ $isScm ? route('plt.dashboard') : route('scm.dashboard') }}" class="module-switch-btn" title="{{ $isScm ? 'Beralih ke Modul PLANT Maintenance' : 'Beralih ke Modul SCM Logistik' }}" data-bs-toggle="tooltip" data-bs-placement="right">
-                        <i class="ki-outline {{ $isScm ? 'ki-wrench' : 'ki-shop' }} fs-2"></i>
-                        <span>{{ $isScm ? 'To Plant' : 'To SCM' }}</span>
-                    </a>
+                    @if(in_array('admin', auth()->user()->allowed_modules ?? []))
+                        <a href="/admin" class="module-switch-btn" title="Buka Admin Panel" data-bs-toggle="tooltip" data-bs-placement="right" style="background: linear-gradient(135deg, #7234cf 0%, #5b21b6 100%);">
+                            <i class="ki-outline ki-setting-2 fs-2"></i>
+                            <span>Admin</span>
+                        </a>
+                    @endif
+                    @if($isScm)
+                        @if(in_array('plt', auth()->user()->allowed_modules ?? []))
+                            <a href="{{ route('plt.dashboard') }}" class="module-switch-btn" title="Beralih ke Modul PLANT Maintenance" data-bs-toggle="tooltip" data-bs-placement="right">
+                                <i class="ki-outline ki-wrench fs-2"></i>
+                                <span>To Plant</span>
+                            </a>
+                        @endif
+                    @else
+                        @if(in_array('scm', auth()->user()->allowed_modules ?? []))
+                            <a href="{{ route('scm.dashboard') }}" class="module-switch-btn" title="Beralih ke Modul SCM Logistik" data-bs-toggle="tooltip" data-bs-placement="right">
+                                <i class="ki-outline ki-shop fs-2"></i>
+                                <span>To SCM</span>
+                            </a>
+                        @endif
+                    @endif
                 </div>
             </div>
             <!--end::Slim Sidebar-->
@@ -517,6 +715,15 @@
                                 @else
                                     <span class="badge bg-light-primary text-primary border border-primary border-opacity-25 fw-bolder fs-8 px-2.5 py-1 rounded-pill">
                                         <i class="ki-outline ki-wrench text-primary fs-7 me-1"></i> PLANT MAINTENANCE
+                                    </span>
+                                @endif
+                                @if(auth()->user()->isSiteRestricted())
+                                    <span class="badge bg-light-success text-success border border-success border-opacity-25 fw-bolder fs-8 px-2.5 py-1 rounded-pill ms-2">
+                                        <i class="ki-outline ki-pin text-success fs-7 me-1"></i> Site: {{ auth()->user()->site->site_name }}
+                                    </span>
+                                @else
+                                    <span class="badge bg-light-info text-info border border-info border-opacity-25 fw-bolder fs-8 px-2.5 py-1 rounded-pill ms-2">
+                                        <i class="ki-outline ki-globe text-info fs-7 me-1"></i> All Sites
                                     </span>
                                 @endif
                             </div>

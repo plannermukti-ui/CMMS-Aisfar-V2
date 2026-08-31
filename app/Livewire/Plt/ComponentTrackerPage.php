@@ -5,6 +5,7 @@ namespace App\Livewire\Plt;
 use App\Models\Equipment;
 use App\Models\PlantComponent;
 use App\Models\PlantComponentMovement;
+use App\Traits\SiteFilterable;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -15,6 +16,7 @@ use Livewire\WithPagination;
 #[Title('Component Tracker & Lifecycle')]
 class ComponentTrackerPage extends Component
 {
+    use SiteFilterable;
     use WithPagination;
 
     public string $search = '';
@@ -156,7 +158,7 @@ class ComponentTrackerPage extends Component
 
     public function openTransferModal(string $id): void
     {
-        $this->activeComponent = PlantComponent::with('equipment')->findOrFail($id);
+        $this->activeComponent = PlantComponent::with(['equipment', 'equipment.latestHmLog'])->findOrFail($id);
         $this->selectedComponentId = $this->activeComponent->id;
         $this->movement_type = $this->activeComponent->equipment_id ? 'remove' : 'install';
         $this->target_equipment_id = null;
@@ -217,7 +219,10 @@ class ComponentTrackerPage extends Component
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $query = PlantComponent::with('equipment')
+            ->when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)))
             ->when($this->search, function ($q) {
                 $q->where(function ($sq) {
                     $sq->where('component_code', 'like', "%{$this->search}%")
@@ -231,13 +236,17 @@ class ComponentTrackerPage extends Component
 
         $components = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        $equipments = Equipment::with('reffEquip')->orderBy('unit')->get();
+        $equipments = Equipment::with('reffEquip')
+            ->when($siteId, fn ($q) => $q->where('site_id', $siteId))
+            ->orderBy('unit')
+            ->get();
 
         // Metrics
-        $totalComponents = PlantComponent::count();
-        $installedCount = PlantComponent::where('status', 'installed')->count();
-        $readySpareCount = PlantComponent::where('status', 'ready_spare')->count();
-        $outsideRepairCount = PlantComponent::where('status', 'in_outside_repair')->count();
+        $base = PlantComponent::query()->when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)));
+        $totalComponents = (clone $base)->count();
+        $installedCount = (clone $base)->where('status', 'installed')->count();
+        $readySpareCount = (clone $base)->where('status', 'ready_spare')->count();
+        $outsideRepairCount = (clone $base)->where('status', 'in_outside_repair')->count();
 
         return view('livewire.plt.component-tracker-page', [
             'components' => $components,

@@ -6,6 +6,7 @@ use App\Models\Part;
 use App\Models\Site;
 use App\Models\StockOpname;
 use App\Models\StockOpnameItem;
+use App\Traits\SiteFilterable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -17,6 +18,7 @@ use Livewire\WithPagination;
 #[Title('SCM - Stock Opname')]
 class StockOpnamePage extends Component
 {
+    use SiteFilterable;
     use WithPagination;
 
     public string $search = '';
@@ -265,17 +267,23 @@ class StockOpnamePage extends Component
 
     public function getMetricsProperty(): array
     {
+        $siteId = self::getCurrentSiteId();
+        $base = StockOpname::query()->when($siteId, fn ($q) => $q->where('site_id', $siteId));
+
         return [
-            'total' => StockOpname::count(),
-            'submitted' => StockOpname::where('status', 'submitted')->count(),
-            'approved' => StockOpname::where('status', 'approved')->count(),
-            'total_variance_value' => StockOpname::where('status', 'approved')->sum('total_variance_value'),
+            'total' => (clone $base)->count(),
+            'submitted' => (clone $base)->where('status', 'submitted')->count(),
+            'approved' => (clone $base)->where('status', 'approved')->count(),
+            'total_variance_value' => (clone $base)->where('status', 'approved')->sum('total_variance_value'),
         ];
     }
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $query = StockOpname::with(['site', 'conductedBy', 'approver', 'items'])
+            ->when($siteId, fn ($q) => $q->where('site_id', $siteId))
             ->when($this->search, function ($q) {
                 $term = '%'.strtolower(trim($this->search)).'%';
                 $q->where(function ($sub) use ($term) {

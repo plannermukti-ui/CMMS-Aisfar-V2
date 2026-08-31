@@ -4,6 +4,9 @@ namespace App\Providers;
 
 use App\Models\Equipment;
 use App\Models\Message;
+use App\Models\PmServiceSchedule;
+use App\Models\PmServiceType;
+use App\Models\PmUnitModel;
 use App\Models\Role;
 use App\Models\User;
 use App\Observers\ActivityObserver;
@@ -43,5 +46,8 @@ class AppServiceProvider extends ServiceProvider
         // Observers
         Equipment::observe(ActivityObserver::class);
         User::observe(ActivityObserver::class);
+        PmUnitModel::observe(ActivityObserver::class);
+        PmServiceType::observe(ActivityObserver::class);
+        PmServiceSchedule::observe(ActivityObserver::class);
     }
 }

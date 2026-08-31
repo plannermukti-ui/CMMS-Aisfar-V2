@@ -82,7 +82,7 @@ class CcrPage extends Component
     public function updatedEquipmentId($value): void
     {
         if ($value) {
-            $eq = Equipment::find($value);
+            $eq = Equipment::with('latestHmLog')->find($value);
             if ($eq) {
                 $this->current_unit_hm = $eq->current_hm ? (float) $eq->current_hm : null;
             }
@@ -224,7 +224,13 @@ class CcrPage extends Component
 
     public function render()
     {
+        $user = auth()->user();
+        $siteId = $user?->getSiteFilterId();
+
         $query = PlantCcr::with(['equipment.reffEquip', 'component', 'inspector', 'workOrder'])
+            ->when($siteId, fn ($q) => $q->where('equipment_id', function ($sub) use ($siteId) {
+                $sub->select('id')->from('equipments')->where('site_id', $siteId);
+            }))
             ->when($this->search, function ($q) {
                 $q->where(function ($sq) {
                     $sq->where('ccr_number', 'like', "%{$this->search}%")
@@ -237,7 +243,7 @@ class CcrPage extends Component
 
         $reports = $query->orderBy('ccr_date', 'desc')->paginate(10);
 
-        $equipments = Equipment::with('reffEquip')->orderBy('unit')->get();
+        $equipments = Equipment::when($siteId, fn ($q) => $q->where('site_id', $siteId))->with(['reffEquip', 'latestHmLog'])->orderBy('unit')->get();
         $components = PlantComponent::orderBy('name')->get();
 
         // Metrics

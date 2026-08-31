@@ -9,6 +9,7 @@ use App\Models\Part;
 use App\Models\PurchaseOrder;
 use App\Models\Site;
 use App\Models\WorkOrderSubtaskSparepart;
+use App\Traits\SiteFilterable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -20,6 +21,7 @@ use Livewire\WithPagination;
 #[Title('SCM - Goods Receipt (GR)')]
 class GrPage extends Component
 {
+    use SiteFilterable;
     use WithPagination;
 
     protected string $paginationTheme = 'bootstrap';
@@ -267,7 +269,10 @@ class GrPage extends Component
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $grs = GoodsReceipt::with(['purchaseOrder.vendor', 'deliveryOrder', 'site', 'receiver', 'items'])
+            ->when($siteId, fn ($q) => $q->where('site_id', $siteId))
             ->when($this->search, function ($q) {
                 $term = '%'.strtolower(trim($this->search)).'%';
                 $q->where(function ($sub) use ($term) {
@@ -283,11 +288,15 @@ class GrPage extends Component
 
         $pendingDos = DeliveryOrder::with(['purchaseOrder', 'items', 'goodsReceipts.items'])
             ->whereIn('status', ['in_transit', 'arrived', 'partially_received'])
+            ->when($siteId, fn ($q) => $q->where('destination_site_id', $siteId))
             ->get()
             ->filter(fn ($d) => $d->has_unreceived_items);
 
         $sites = Site::orderBy('site_name')->get();
-        $parts = Part::where('is_active', true)->orderBy('name')->get();
+        $parts = Part::where('is_active', true)
+            ->when($siteId, fn ($q) => $q->whereHas('locations', fn ($l) => $l->where('site_id', $siteId)))
+            ->orderBy('name')
+            ->get();
 
         return view('livewire.scm.gr-page', compact('grs', 'pendingDos', 'sites', 'parts'));
     }

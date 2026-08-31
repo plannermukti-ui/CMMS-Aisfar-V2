@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\Site;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Radio;
@@ -62,6 +63,12 @@ class UserForm
                             ])
                             ->required()
                             ->default('pending'),
+                        Select::make('site_id')
+                            ->label('Site / Lokasi')
+                            ->options(fn () => ['' => 'All Sites (Semua Site)'] + Site::pluck('site_name', 'id')->toArray())
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Pilih site spesifik atau All Sites agar user dapat melihat data dari semua site.'),
                         CheckboxList::make('allowed_modules')
                             ->label('Modul yang Diizinkan')
                             ->options([

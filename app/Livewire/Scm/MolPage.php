@@ -8,6 +8,7 @@ use App\Models\Part;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use App\Models\WorkOrder;
+use App\Traits\SiteFilterable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -19,6 +20,7 @@ use Livewire\WithPagination;
 #[Title('SCM - Material Order (MOL)')]
 class MolPage extends Component
 {
+    use SiteFilterable;
     use WithPagination;
 
     protected string $paginationTheme = 'bootstrap';
@@ -368,7 +370,10 @@ class MolPage extends Component
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $mols = MaterialOrder::with(['requester', 'approver', 'workOrder.equipment', 'items.part'])
+            ->when($siteId, fn ($q) => $q->whereHas('workOrder.equipment', fn ($eq) => $eq->where('site_id', $siteId)))
             ->when($this->search, function ($q) {
                 $term = '%'.strtolower(trim($this->search)).'%';
                 $q->where(function ($sub) use ($term) {
@@ -385,8 +390,15 @@ class MolPage extends Component
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $workOrders = WorkOrder::with('equipment')->whereNotIn('status', ['closed', 'cancelled'])->orderBy('created_at', 'desc')->get();
-        $parts = Part::where('is_active', true)->orderBy('name')->get();
+        $workOrders = WorkOrder::with('equipment')
+            ->whereNotIn('status', ['closed', 'cancelled'])
+            ->when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)))
+            ->orderBy('created_at', 'desc')
+            ->get();
+        $parts = Part::where('is_active', true)
+            ->when($siteId, fn ($q) => $q->whereHas('locations', fn ($l) => $l->where('site_id', $siteId)))
+            ->orderBy('name')
+            ->get();
 
         return view('livewire.scm.mol-page', compact('mols', 'workOrders', 'parts'));
     }

@@ -7,6 +7,7 @@ use App\Imports\HmUpdateImport;
 use App\Models\Equipment;
 use App\Models\EquipmentHm;
 use App\Services\HmInterpolationService;
+use App\Traits\SiteFilterable;
 use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -15,6 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class HmUpdatePage extends Component
 {
+    use SiteFilterable;
     use WithFileUploads, WithPagination;
 
     public $searchUnit = '';
@@ -110,7 +112,10 @@ class HmUpdatePage extends Component
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $query = EquipmentHm::with('equipment', 'creator', 'updater')
+            ->when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)))
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc');
 
@@ -126,7 +131,10 @@ class HmUpdatePage extends Component
         }
 
         $logs = $query->paginate(20);
-        $equipments = Equipment::with('reffEquip')->orderBy('unit')->get();
+        $equipments = Equipment::with('reffEquip')
+            ->when($siteId, fn ($q) => $q->where('site_id', $siteId))
+            ->orderBy('unit')
+            ->get();
 
         return view('components.plt.hm-update-page', [
             'logs' => $logs,

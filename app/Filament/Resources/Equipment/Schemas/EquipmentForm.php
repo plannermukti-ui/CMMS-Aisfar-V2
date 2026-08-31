@@ -58,6 +58,12 @@ class EquipmentForm
                     ->searchable()
                     ->preload()
                     ->label('Location (Site)'),
+                Select::make('pm_unit_model_id')
+                    ->relationship('pmUnitModel', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('PM Unit Model')
+                    ->placeholder('Select PM Model (for Preventive Maintenance)'),
                 Textarea::make('remarks')
                     ->columnSpanFull(),
             ])

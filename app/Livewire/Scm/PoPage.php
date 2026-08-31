@@ -6,6 +6,7 @@ use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderItem;
 use App\Models\PurchaseOrder;
 use App\Models\Site;
+use App\Traits\SiteFilterable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -17,6 +18,7 @@ use Livewire\WithPagination;
 #[Title('SCM - Purchase Order (PO)')]
 class PoPage extends Component
 {
+    use SiteFilterable;
     use WithPagination;
 
     protected string $paginationTheme = 'bootstrap';
@@ -196,7 +198,10 @@ class PoPage extends Component
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $pos = PurchaseOrder::with(['vendor', 'items', 'approver'])
+            ->when($siteId, fn ($q) => $q->whereHas('purchaseRequest.materialOrder.workOrder.equipment', fn ($eq) => $eq->where('site_id', $siteId)))
             ->when($this->search, function ($q) {
                 $term = '%'.strtolower(trim($this->search)).'%';
                 $q->where(function ($sub) use ($term) {

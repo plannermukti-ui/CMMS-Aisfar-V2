@@ -8,6 +8,7 @@ use App\Models\PurchaseRequest;
 use App\Models\RfqQuotation;
 use App\Models\RfqQuotationItem;
 use App\Models\Vendor;
+use App\Traits\SiteFilterable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -19,6 +20,7 @@ use Livewire\WithPagination;
 #[Title('SCM - Request for Quotation (RFQ)')]
 class RfqPage extends Component
 {
+    use SiteFilterable;
     use WithPagination;
 
     protected string $paginationTheme = 'bootstrap';
@@ -325,13 +327,20 @@ class RfqPage extends Component
             $this->comparePr->loadMissing(['items', 'quotations.vendor', 'quotations.items']);
         }
 
+        $siteId = self::getCurrentSiteId();
+
         $approvedPrs = PurchaseRequest::with(['items', 'quotations.vendor'])
             ->whereIn('status', ['approved', 'rfq_created', 'po_created'])
+            ->when($siteId, fn ($q) => $q->whereHas('materialOrder.workOrder.equipment', fn ($eq) => $eq->where('site_id', $siteId)))
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         $vendors = Vendor::where('is_active', true)->orderBy('name')->get();
-        $allPrs = PurchaseRequest::with('items')->whereIn('status', ['approved', 'rfq_created'])->orderBy('created_at', 'desc')->get();
+        $allPrs = PurchaseRequest::with('items')
+            ->whereIn('status', ['approved', 'rfq_created'])
+            ->when($siteId, fn ($q) => $q->whereHas('materialOrder.workOrder.equipment', fn ($eq) => $eq->where('site_id', $siteId)))
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('livewire.scm.rfq-page', compact('approvedPrs', 'vendors', 'allPrs'));
     }

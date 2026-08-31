@@ -18,39 +18,48 @@ class DashboardPage extends Component
 {
     public function render()
     {
+        // ── Site Filter ──────────────────────────────────────────
+        $user = auth()->user();
+        $siteId = $user?->getSiteFilterId();
+        $siteName = $user?->site?->site_name ?? 'All Sites';
+
         // ── KPI Cards ─────────────────────────────────────────────
         $kpis = [
-            'total_equipments' => Equipment::count(),
-            'active_wo' => WorkOrder::whereNotIn('status', ['closed', 'cancelled'])->count(),
-            'open_wo' => WorkOrder::where('status', 'open')->count(),
-            'in_progress_wo' => WorkOrder::where('status', 'in_progress')->count(),
-            'breakdown_wo' => WorkOrder::where('wo_type', 'breakdown')->whereNotIn('status', ['closed', 'cancelled'])->count(),
-            'completed_wo' => WorkOrder::whereIn('status', ['completed', 'closed'])->count(),
+            'total_equipments' => Equipment::when($siteId, fn ($q) => $q->where('site_id', $siteId))->count(),
+            'active_wo' => WorkOrder::when($siteId, fn ($q) => $q->where('site_id', $siteId))->whereNotIn('status', ['closed', 'cancelled'])->count(),
+            'open_wo' => WorkOrder::when($siteId, fn ($q) => $q->where('site_id', $siteId))->where('status', 'open')->count(),
+            'in_progress_wo' => WorkOrder::when($siteId, fn ($q) => $q->where('site_id', $siteId))->where('status', 'in_progress')->count(),
+            'breakdown_wo' => WorkOrder::when($siteId, fn ($q) => $q->where('site_id', $siteId))->where('wo_type', 'breakdown')->whereNotIn('status', ['closed', 'cancelled'])->count(),
+            'completed_wo' => WorkOrder::when($siteId, fn ($q) => $q->where('site_id', $siteId))->whereIn('status', ['completed', 'closed'])->count(),
             'waiting_spareparts' => WorkOrderSubtaskSparepart::where('status', 'waiting_part')->count(),
             'mol_requests' => MaterialOrder::whereIn('status', ['submitted', 'approved'])->count(),
         ];
 
         // ── Recent Work Orders ────────────────────────────────────
-        $recentWorkOrders = WorkOrder::with(['equipment.site', 'equipment.reffEquip', 'tasks.subtasks.mechanics'])
+        $recentWorkOrders = WorkOrder::when($siteId, fn ($q) => $q->where('site_id', $siteId))
+            ->with(['equipment.site', 'equipment.reffEquip', 'tasks.subtasks.mechanics'])
             ->orderBy('created_at', 'desc')
             ->limit(6)
             ->get();
 
         // ── Equipment Fleet Overview ──────────────────────────────
-        $equipmentOverview = Equipment::with(['site', 'reffEquip'])
+        $equipmentOverview = Equipment::when($siteId, fn ($q) => $q->where('site_id', $siteId))
+            ->with(['site', 'reffEquip'])
             ->orderBy('unit')
             ->limit(8)
             ->get();
 
         // ── WO by Type (for mini chart) ───────────────────────────
-        $woByType = WorkOrder::select('wo_type', DB::raw('count(*) as total'))
+        $woByType = WorkOrder::when($siteId, fn ($q) => $q->where('site_id', $siteId))
+            ->select('wo_type', DB::raw('count(*) as total'))
             ->groupBy('wo_type')
             ->orderByDesc('total')
             ->get()
             ->mapWithKeys(fn ($row) => [$row->wo_type => $row->total]);
 
         // ── WO by Status ──────────────────────────────────────────
-        $woByStatus = WorkOrder::select('status', DB::raw('count(*) as total'))
+        $woByStatus = WorkOrder::when($siteId, fn ($q) => $q->where('site_id', $siteId))
+            ->select('status', DB::raw('count(*) as total'))
             ->groupBy('status')
             ->orderByDesc('total')
             ->get()
@@ -64,7 +73,8 @@ class DashboardPage extends Component
             ->get();
 
         // ── Downtime top offenders ─────────────────────────────────
-        $topDowntime = WorkOrder::with('equipment')
+        $topDowntime = WorkOrder::when($siteId, fn ($q) => $q->where('site_id', $siteId))
+            ->with('equipment')
             ->where('downtime_hours', '>', 0)
             ->whereNotNull('downtime_hours')
             ->orderByDesc('downtime_hours')
@@ -72,13 +82,7 @@ class DashboardPage extends Component
             ->get();
 
         return view('livewire.plt.dashboard-page', compact(
-            'kpis',
-            'recentWorkOrders',
-            'equipmentOverview',
-            'woByType',
-            'woByStatus',
-            'recentComments',
-            'topDowntime',
+            'kpis', 'recentWorkOrders', 'equipmentOverview', 'woByType', 'woByStatus', 'recentComments', 'topDowntime', 'siteName',
         ));
     }
 }

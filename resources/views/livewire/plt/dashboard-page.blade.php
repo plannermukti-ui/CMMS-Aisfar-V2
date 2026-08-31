@@ -8,6 +8,15 @@
             <span class="fs-7 text-muted fw-semibold">
                 Monitoring operasional alat berat, penanganan breakdown, penjadwalan servis & Work Order.
                 <span class="badge badge-light-primary ms-2 fs-9">{{ now()->format('d M Y, H:i') }} WIB</span>
+                @if(auth()->user()->isSiteRestricted())
+                    <span class="badge badge-light-success ms-2 fs-9">
+                        <i class="ki-outline ki-pin fs-7 me-1"></i> Site: {{ auth()->user()->site->site_name }}
+                    </span>
+                @else
+                    <span class="badge badge-light-info ms-2 fs-9">
+                        <i class="ki-outline ki-globe fs-7 me-1"></i> All Sites
+                    </span>
+                @endif
             </span>
         </div>
         <div class="d-flex gap-2 flex-wrap">
@@ -378,6 +387,27 @@
                             <div>
                                 <div class="fw-bolder text-gray-900 fs-7">Investigasi Kerusakan (FAR)</div>
                                 <span class="text-muted fs-9">Root Cause 5-Why & CAPA</span>
+                            </div>
+                        </a>
+                        <a href="{{ route('plt.pm-monitoring') }}" class="d-flex align-items-center p-3 rounded-2 bg-light-warning text-hover-warning text-decoration-none gap-3">
+                            <i class="ki-outline ki-chart-line-down fs-3 text-warning"></i>
+                            <div>
+                                <div class="fw-bolder text-gray-900 fs-7">PM Monitoring Service</div>
+                                <span class="text-muted fs-9">Jadwal & Generate WO PM</span>
+                            </div>
+                        </a>
+                        <a href="{{ route('plt.pm-service-types') }}" class="d-flex align-items-center p-3 rounded-2 bg-light-secondary text-hover-secondary text-decoration-none gap-3">
+                            <i class="ki-outline ki-setting-3 fs-3 text-secondary"></i>
+                            <div>
+                                <div class="fw-bolder text-gray-900 fs-7">PM Service Types</div>
+                                <span class="text-muted fs-9">Master Data Service & Task</span>
+                            </div>
+                        </a>
+                        <a href="{{ route('plt.pm-history') }}" class="d-flex align-items-center p-3 rounded-2 bg-light-info text-hover-info text-decoration-none gap-3">
+                            <i class="ki-outline ki-clock fs-3 text-info"></i>
+                            <div>
+                                <div class="fw-bolder text-gray-900 fs-7">PM History Service</div>
+                                <span class="text-muted fs-9">Riwayat PM Selesai</span>
                             </div>
                         </a>
                         <a href="{{ route('plt.osr') }}" class="d-flex align-items-center p-3 rounded-2 bg-light-success text-hover-success text-decoration-none gap-3">

@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\SiteFilterable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Equipment extends BaseModel
 {
-    use SoftDeletes;
+    use SiteFilterable, SoftDeletes;
 
     protected $table = 'equipments';
 
@@ -15,6 +16,7 @@ class Equipment extends BaseModel
         'no',
         'status',
         'reff_equip_id',
+        'pm_unit_model_id',
         'sn_unit',
         'engine_model',
         'sn_engine',
@@ -33,6 +35,11 @@ class Equipment extends BaseModel
     public function reffEquip()
     {
         return $this->belongsTo(ReffEquip::class, 'reff_equip_id');
+    }
+
+    public function pmUnitModel()
+    {
+        return $this->belongsTo(PmUnitModel::class, 'pm_unit_model_id');
     }
 
     public function site()
@@ -87,5 +94,27 @@ class Equipment extends BaseModel
         $log = $this->hmLogs()->whereDate('date', '<=', $date)->first();
 
         return $log ? $log->hm_value : 0;
+    }
+
+    /**
+     * HM (Hour Meter) terkini unit, diambil dari log HM terakhir.
+     * Diakses via $equipment->current_hm di seluruh aplikasi.
+     * Uses eager-loaded latestHmLog if available, otherwise queries directly.
+     */
+    public function getCurrentHmAttribute(): ?int
+    {
+        if ($this->relationLoaded('latestHmLog')) {
+            return $this->latestHmLog?->hm_value;
+        }
+
+        return EquipmentHm::where('equipment_id', $this->id)
+            ->whereNull('deleted_at')
+            ->latest('date')
+            ->value('hm_value');
+    }
+
+    public function pmSchedules()
+    {
+        return $this->hasMany(PmServiceSchedule::class, 'equipment_id');
     }
 }

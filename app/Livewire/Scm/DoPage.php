@@ -6,6 +6,7 @@ use App\Models\DeliveryOrder;
 use App\Models\DeliveryOrderItem;
 use App\Models\PurchaseOrder;
 use App\Models\Site;
+use App\Traits\SiteFilterable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -17,6 +18,7 @@ use Livewire\WithPagination;
 #[Title('SCM - Delivery Order (DO)')]
 class DoPage extends Component
 {
+    use SiteFilterable;
     use WithPagination;
 
     protected string $paginationTheme = 'bootstrap';
@@ -192,7 +194,10 @@ class DoPage extends Component
 
     public function render()
     {
+        $siteId = self::getCurrentSiteId();
+
         $dos = DeliveryOrder::with(['purchaseOrder.vendor', 'destinationSite', 'items', 'creator', 'goodsReceipts.items'])
+            ->when($siteId, fn ($q) => $q->where('destination_site_id', $siteId))
             ->when($this->search, function ($q) {
                 $term = '%'.strtolower(trim($this->search)).'%';
                 $q->where(function ($sub) use ($term) {
@@ -210,6 +215,7 @@ class DoPage extends Component
 
         $availablePos = PurchaseOrder::with(['vendor', 'items', 'deliveryOrders.items'])
             ->whereIn('status', ['approved', 'sent_to_vendor', 'partially_shipped', 'partially_received', 'do_created'])
+            ->when($siteId, fn ($q) => $q->whereHas('purchaseRequest.materialOrder.workOrder.equipment', fn ($eq) => $eq->where('site_id', $siteId)))
             ->get()
             ->filter(fn ($p) => $p->has_unshipped_items);
 

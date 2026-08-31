@@ -9,6 +9,9 @@ use App\Livewire\Plt\DashboardPage as PltDashboardPage;
 use App\Livewire\Plt\FarPage;
 use App\Livewire\Plt\HmUpdatePage;
 use App\Livewire\Plt\OsrPage;
+use App\Livewire\Plt\PmHistoryPage;
+use App\Livewire\Plt\PmMonitoringPage;
+use App\Livewire\Plt\PmServiceTypePage;
 use App\Livewire\Scm\DashboardPage as ScmDashboardPage;
 use App\Livewire\Scm\DoPage as ScmDoPage;
 use App\Livewire\Scm\GrPage as ScmGrPage;
@@ -23,7 +26,29 @@ use App\Livewire\User\WorkOrderPage;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect('/plt/dashboard');
+    if (auth()->check()) {
+        $user = auth()->user();
+        $allowedModules = $user->allowed_modules ?? [];
+
+        // Priority: admin → plt → scm
+        if (in_array('admin', $allowedModules)) {
+            return redirect('/admin');
+        }
+        if (in_array('plt', $allowedModules)) {
+            return redirect('/plt/dashboard');
+        }
+        if (in_array('scm', $allowedModules)) {
+            return redirect('/scm/dashboard');
+        }
+
+        return redirect('/profile');
+    }
+
+    return redirect('/admin/login');
+});
+
+Route::get('/login', function () {
+    return redirect('/admin/login');
 });
 
 // Global Routes (/chat & /profile)
@@ -53,6 +78,10 @@ Route::middleware(['auth', 'module_access:plt'])->prefix('plt')->group(function 
     Route::get('/far/{id}/print', [PltPrintController::class, 'printFar'])->name('plt.far.print');
     Route::get('/osr', OsrPage::class)->name('plt.osr');
     Route::get('/osr/{id}/print', [PltPrintController::class, 'printOsr'])->name('plt.osr.print');
+    // Preventive Maintenance Routes
+    Route::get('/pm-service-types', PmServiceTypePage::class)->name('plt.pm-service-types');
+    Route::get('/pm-monitoring', PmMonitoringPage::class)->name('plt.pm-monitoring');
+    Route::get('/pm-history', PmHistoryPage::class)->name('plt.pm-history');
     Route::get('/chat', function () {
         return redirect('/chat');
     })->name('plt.chat');
