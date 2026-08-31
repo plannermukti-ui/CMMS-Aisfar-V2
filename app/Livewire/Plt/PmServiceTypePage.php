@@ -5,6 +5,7 @@ namespace App\Livewire\Plt;
 use App\Models\PmServiceType;
 use App\Models\PmServiceTypePart;
 use App\Models\PmServiceTypeTask;
+use App\Models\PmUnitModel;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -34,6 +35,8 @@ class PmServiceTypePage extends Component
     public ?string $selectedServiceTypeId = null;
 
     public string $st_name = '';
+
+    public ?string $st_pm_unit_model_id = null;
 
     public string $st_measurement_type = 'hm';
 
@@ -89,18 +92,32 @@ class PmServiceTypePage extends Component
             $st = PmServiceType::findOrFail($id);
             $this->selectedServiceTypeId = $st->id;
             $this->st_name = $st->name;
+            $this->st_pm_unit_model_id = $st->pm_unit_model_id;
             $this->st_measurement_type = $st->measurement_type;
             $this->st_interval_value = $st->interval_value;
             $this->st_description = $st->description ?? '';
             $this->st_status = $st->status;
         } else {
-            $this->reset(['selectedServiceTypeId', 'st_name', 'st_description']);
+            $this->reset(['selectedServiceTypeId', 'st_name', 'st_description', 'st_pm_unit_model_id']);
             $this->st_measurement_type = 'hm';
             $this->st_interval_value = 250;
             $this->st_status = 'active';
         }
 
         $this->showServiceTypeModal = true;
+    }
+
+    /**
+     * When PM Unit Model is selected, auto-fill measurement type from the model.
+     */
+    public function updatedStPmUnitModelId(?string $value): void
+    {
+        if ($value) {
+            $model = PmUnitModel::find($value);
+            if ($model) {
+                $this->st_measurement_type = $model->measurement_type;
+            }
+        }
     }
 
     public function saveServiceType(): void
@@ -114,6 +131,7 @@ class PmServiceTypePage extends Component
 
         $data = [
             'name' => $this->st_name,
+            'pm_unit_model_id' => $this->st_pm_unit_model_id ?: null,
             'measurement_type' => $this->st_measurement_type,
             'interval_value' => $this->st_interval_value,
             'description' => $this->st_description,
@@ -272,7 +290,7 @@ class PmServiceTypePage extends Component
 
     public function render()
     {
-        $query = PmServiceType::withCount('tasks')
+        $query = PmServiceType::with(['unitModel'])->withCount('tasks')
             ->when($this->search, fn ($q) => $q->where(function ($sq) {
                 $sq->where('name', 'like', "%{$this->search}%")
                     ->orWhere('description', 'like', "%{$this->search}%");
@@ -287,12 +305,16 @@ class PmServiceTypePage extends Component
         $kmTypes = PmServiceType::where('measurement_type', 'km')->count();
         $totalTasks = PmServiceTypeTask::count();
 
+        // PM Unit Models for dropdown
+        $pmUnitModels = PmUnitModel::where('status', 'active')->orderBy('name')->get();
+
         return view('livewire.plt.pm-service-type-page', compact(
             'serviceTypes',
             'totalTypes',
             'hmTypes',
             'kmTypes',
             'totalTasks',
+            'pmUnitModels',
         ));
     }
 }

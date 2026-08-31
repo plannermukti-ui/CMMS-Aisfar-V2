@@ -101,6 +101,7 @@
                     <thead>
                         <tr class="fw-bold text-muted fs-8 text-uppercase">
                             <th>Nama Service Type</th>
+                            <th>Unit Model</th>
                             <th>Tipe & Interval</th>
                             <th>Jumlah Task</th>
                             <th>Status</th>
@@ -114,6 +115,13 @@
                                     <span class="text-gray-900 fw-bold fs-7">{{ $st->name }}</span>
                                     @if($st->description)
                                         <span class="text-muted fs-9 d-block text-truncate" style="max-width: 300px;" title="{{ $st->description }}">{{ $st->description }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($st->pm_unit_model_id)
+                                        <span class="badge badge-light-primary fs-9 fw-bold">{{ $st->unitModel?->name ?? '-' }}</span>
+                                    @else
+                                        <span class="text-muted fs-9">Semua Model</span>
                                     @endif
                                 </td>
                                 <td>
@@ -142,7 +150,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-8">
+                                <td colspan="6" class="text-center py-8">
                                     <i class="ki-outline ki-setting-3 fs-3x text-gray-300 mb-3 d-block"></i>
                                     <span class="text-muted fs-8">Belum ada data Service Type.</span>
                                 </td>
@@ -177,6 +185,17 @@
                             @error('st_name') <span class="text-danger fs-7">{{ $message }}</span> @enderror
                         </div>
 
+                        <div class="mb-5">
+                            <label class="fs-6 fw-semibold mb-2">PM Unit Model</label>
+                            <select wire:model="st_pm_unit_model_id" class="form-select form-select-solid">
+                                <option value="">-- Pilih Unit Model (opsional) --</option>
+                                @foreach($pmUnitModels as $model)
+                                    <option value="{{ $model->id }}">{{ $model->name }} ({{ strtoupper($model->measurement_type) }})</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Pilih unit model agar service type ini terhubung ke equipment yang sesuai.</div>
+                        </div>
+
                         <div class="row mb-5">
                             <div class="col-md-6">
                                 <label class="required fs-6 fw-semibold mb-2">Tipe Pengukuran</label>
@@ -184,6 +203,7 @@
                                     <option value="hm">Hour Meter (HM)</option>
                                     <option value="km">Kilometer (KM)</option>
                                 </select>
+                                <div class="form-text">Otomatis terisi jika PM Unit Model dipilih.</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="required fs-6 fw-semibold mb-2">Interval Value</label>

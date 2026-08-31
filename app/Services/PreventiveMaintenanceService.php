@@ -102,9 +102,15 @@ class PreventiveMaintenanceService
         }
 
         $measurementType = $equipment->pmUnitModel->measurement_type;
+        $pmUnitModelId = $equipment->pm_unit_model_id;
 
+        // Match service types by measurement_type AND unit model (if linked)
         $serviceTypes = PmServiceType::where('measurement_type', $measurementType)
             ->where('status', 'active')
+            ->where(function ($q) use ($pmUnitModelId) {
+                $q->where('pm_unit_model_id', $pmUnitModelId)
+                    ->orWhereNull('pm_unit_model_id'); // Also include global service types (no unit model)
+            })
             ->get();
 
         foreach ($serviceTypes as $serviceType) {
@@ -265,8 +271,15 @@ class PreventiveMaintenanceService
 
         foreach ($equipments as $equipment) {
             $measurementType = $equipment->pmUnitModel->measurement_type;
+            $pmUnitModelId = $equipment->pm_unit_model_id;
+
+            // Match service types by measurement_type AND unit model (if linked)
             $serviceTypes = PmServiceType::where('measurement_type', $measurementType)
                 ->where('status', 'active')
+                ->where(function ($q) use ($pmUnitModelId) {
+                    $q->where('pm_unit_model_id', $pmUnitModelId)
+                        ->orWhereNull('pm_unit_model_id'); // Also include global service types
+                })
                 ->get();
 
             foreach ($serviceTypes as $serviceType) {

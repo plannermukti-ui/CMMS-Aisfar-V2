@@ -108,7 +108,6 @@ class Equipment extends BaseModel
         }
 
         return EquipmentHm::where('equipment_id', $this->id)
-            ->whereNull('deleted_at')
             ->latest('date')
             ->value('hm_value');
     }

@@ -11,6 +11,7 @@ class PmServiceType extends BaseModel
 
     protected $fillable = [
         'name',
+        'pm_unit_model_id',
         'measurement_type',
         'interval_value',
         'description',

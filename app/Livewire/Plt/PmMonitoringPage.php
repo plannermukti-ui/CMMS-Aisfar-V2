@@ -103,6 +103,7 @@ class PmMonitoringPage extends Component
         $query = PmServiceSchedule::with([
             'equipment.reffEquip',
             'equipment.pmUnitModel',
+            'equipment.latestHmLog',
             'serviceType',
         ])
             ->when($siteId, fn ($q) => $q->whereHas('equipment', fn ($eq) => $eq->where('site_id', $siteId)))
